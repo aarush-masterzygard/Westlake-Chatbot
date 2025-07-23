@@ -23,17 +23,47 @@ def check_requirements():
         return False
 
 def check_api_key():
-    """Check if API key is configured"""
+    """Check if API key is configured - prioritize Streamlit secrets"""
     from dotenv import load_dotenv
+    import streamlit as st
+    
+    # Load environment variables as fallback
     load_dotenv(dotenv_path="Environment/API-Key.env")
     
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = None
+    source = ""
+    
+    # First try Streamlit secrets (check both possible locations)
+    try:
+        secrets_paths = [
+            "Source/.streamlit/secrets.toml",  # App-level (where Streamlit looks when running Source/7_Chatbot.py)
+            ".streamlit/secrets.toml"          # Root-level (backup)
+        ]
+        
+        for secrets_path in secrets_paths:
+            if os.path.exists(secrets_path):
+                with open(secrets_path, "r") as f:
+                    content = f.read()
+                    if "OPENAI_API_KEY" in content and "sk-" in content:
+                        api_key = "found_in_secrets"
+                        source = f"Streamlit secrets ({secrets_path})"
+                        break
+    except Exception:
+        pass
+    
+    # Fallback to environment variable
+    if not api_key:
+        api_key = os.getenv("OPENAI_API_KEY")
+        source = "environment variable"
+    
     if not api_key or api_key == "your-openai-api-key-here":
         print("❌ OpenAI API key not configured")
-        print("Please add your API key to Environment/API-Key.env")
+        print("Please add your API key to:")
+        print("  - Source/.streamlit/secrets.toml (for deployment)")
+        print("  - Environment/API-Key.env (for local development)")
         return False
     
-    print("✅ API key configured")
+    print(f"✅ API key configured from {source}")
     return True
 
 def check_vector_db():

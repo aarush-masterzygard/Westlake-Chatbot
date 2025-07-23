@@ -3,7 +3,12 @@ Environment/API-Key.env
 .env
 
 # Streamlit secrets
-.streamlit/secrets.toml
+Source/.streamlit/secrets.toml
+
+# Development/Setup files
+test_api_key.py
+deploy.py
+API_KEY_SETUP.md
 
 # Python
 __pycache__/

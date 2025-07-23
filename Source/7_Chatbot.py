@@ -73,11 +73,31 @@ os.environ["USER_AGENT"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKi
 # Load environment variables (works for both local and deployed)
 load_dotenv(dotenv_path="Environment/API-Key.env")
 
-# Get API key from environment or Streamlit secrets
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY")
+# Get API key - prioritize Streamlit secrets over environment variables
+try:
+    # First try to get from Streamlit secrets (for cloud deployment)
+    OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY")
+    if OPENAI_API_KEY:
+        print("✅ Using API key from Streamlit secrets")
+    else:
+        # Fallback to environment variable (for local development)
+        OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+        if OPENAI_API_KEY:
+            print("✅ Using API key from environment variable")
+        else:
+            print("❌ No API key found in secrets or environment")
+except Exception:
+    # If secrets are not available (local development), use environment
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    if OPENAI_API_KEY:
+        print("✅ Using API key from environment variable (secrets not available)")
+    else:
+        print("❌ No API key found")
 
-
-
+# Validate API key is properly set
+if not OPENAI_API_KEY or OPENAI_API_KEY == "your-openai-api-key-here":
+    st.error("🚨 OpenAI API key not configured! Please check your secrets or environment variables.")
+    st.stop()
 
 # Path to the prebuilt FAISS index
 index_Faiss_Filepath = "index.faiss"

@@ -10,7 +10,47 @@ from urllib.parse import urljoin, urlparse
 import time
 
 load_dotenv(dotenv_path="Environment/API-Key.env")
+
+# Get API key - try multiple sources
+OPENAI_API_KEY = None
+
+# First try environment variable
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# If not found, try reading from secrets file directly
+if not OPENAI_API_KEY:
+    try:
+        secrets_paths = [
+            "Source/.streamlit/secrets.toml",
+            ".streamlit/secrets.toml"
+        ]
+        
+        for secrets_path in secrets_paths:
+            if os.path.exists(secrets_path):
+                with open(secrets_path, "r") as f:
+                    content = f.read()
+                    # Simple parsing for OPENAI_API_KEY
+                    for line in content.split('\n'):
+                        if 'OPENAI_API_KEY' in line and '=' in line:
+                            # Extract the key value
+                            key_value = line.split('=', 1)[1].strip().strip('"').strip("'")
+                            if key_value and key_value.startswith('sk-'):
+                                OPENAI_API_KEY = key_value
+                                print(f"✅ Using API key from {secrets_path}")
+                                break
+                if OPENAI_API_KEY:
+                    break
+    except Exception as e:
+        print(f"⚠️ Could not read secrets file: {e}")
+
+if not OPENAI_API_KEY:
+    print("❌ No OpenAI API key found!")
+    print("Please set your API key in:")
+    print("  - Environment/API-Key.env")
+    print("  - Source/.streamlit/secrets.toml")
+    exit(1)
+else:
+    print(f"✅ API key loaded successfully")
 
 
 '''To switch between URLs, just change the last line (194):
@@ -120,24 +160,43 @@ def load_and_process_website(base_url, max_pages=50):
     print(f"\n✂️ Splitting documents into chunks...")
     text_splitter = CharacterTextSplitter(
         separator="\n",
-        chunk_size=800,  # Below 1000 as requested
-        chunk_overlap=200,  # Overlap to ensure nothing is missed
+        chunk_size=600,  # Smaller chunks to avoid token limits
+        chunk_overlap=100,  # Reduced overlap
         length_function=len
     )
     
     all_chunks = []
     total_chars = 0
+    max_chunk_size = 0
     
     for i, doc in enumerate(all_docs):
+        # Skip documents that are extremely large
+        if len(doc.page_content) > 100000:  # Skip docs over 100k characters
+            print(f"   ⚠️ Document {i+1}: {len(doc.page_content)} chars - TOO LARGE, SKIPPING")
+            continue
+            
         chunks = text_splitter.split_documents([doc])
-        all_chunks.extend(chunks)
+        
+        # Filter out chunks that are still too large
+        valid_chunks = []
+        for chunk in chunks:
+            chunk_tokens = len(chunk.page_content.split()) * 1.3  # Rough token estimate
+            if chunk_tokens < 8000:  # Well below 8192 token limit
+                valid_chunks.append(chunk)
+                max_chunk_size = max(max_chunk_size, len(chunk.page_content))
+            else:
+                print(f"   ⚠️ Skipping oversized chunk: {int(chunk_tokens)} tokens")
+        
+        all_chunks.extend(valid_chunks)
         total_chars += len(doc.page_content)
-        print(f"   📄 Document {i+1}: {len(doc.page_content)} chars → {len(chunks)} chunks")
+        print(f"   📄 Document {i+1}: {len(doc.page_content)} chars → {len(valid_chunks)} valid chunks")
     
     print(f"\n📊 Chunking Summary:")
     print(f"   📄 Total chunks created: {len(all_chunks)}")
     print(f"   📝 Total characters processed: {total_chars:,}")
     print(f"   📊 Average chunk size: {total_chars // len(all_chunks) if all_chunks else 0} chars")
+    print(f"   📊 Largest chunk size: {max_chunk_size} chars")
+    print(f"   📊 Estimated max tokens per chunk: {int(max_chunk_size * 1.3)} tokens")
     
     # Create embeddings and save to vector database
     if all_chunks:
@@ -167,13 +226,37 @@ def load_and_process_website(base_url, max_pages=50):
             print(f"   📊 Estimated tokens to be processed: {int(total_tokens_estimate):,}")
             print(f"   💰 Estimated cost: ${estimated_cost:.6f} (${cost_per_1k_tokens} per 1K tokens)")
             
-            vectordb = FAISS.from_documents(all_chunks, embeddings_model)
+            # Process chunks in smaller batches to avoid API limits
+            batch_size = 50  # Process 50 chunks at a time
+            print(f"   🔄 Processing {len(all_chunks)} chunks in batches of {batch_size}...")
+            
+            if len(all_chunks) <= batch_size:
+                # Small number of chunks - process all at once
+                vectordb = FAISS.from_documents(all_chunks, embeddings_model)
+            else:
+                # Large number of chunks - process in batches
+                print(f"   📦 Batch 1/{(len(all_chunks) + batch_size - 1) // batch_size}: Processing first {min(batch_size, len(all_chunks))} chunks...")
+                vectordb = FAISS.from_documents(all_chunks[:batch_size], embeddings_model)
+                
+                # Add remaining chunks in batches
+                for i in range(batch_size, len(all_chunks), batch_size):
+                    batch_num = (i // batch_size) + 1
+                    total_batches = (len(all_chunks) + batch_size - 1) // batch_size
+                    batch_end = min(i + batch_size, len(all_chunks))
+                    batch_chunks = all_chunks[i:batch_end]
+                    
+                    print(f"   📦 Batch {batch_num}/{total_batches}: Processing chunks {i+1}-{batch_end}...")
+                    batch_vectordb = FAISS.from_documents(batch_chunks, embeddings_model)
+                    vectordb.merge_from(batch_vectordb)
+                    
+                    # Small delay between batches to be respectful to API
+                    time.sleep(1)
             
             # Note: Actual token usage from OpenAI API is not directly accessible
             # The estimate above is approximate based on text length
             
             # Save the vector database
-            index_Faiss_Filepath = "index.faiss"
+            index_Faiss_Filepath = "Source/index.faiss"
             print(f"   💾 Saving vector database to {index_Faiss_Filepath}...")
             vectordb.save_local(index_Faiss_Filepath)
             
@@ -214,7 +297,7 @@ if __name__ == "__main__":
     # =====================================================
     
     # Number of pages to scrape (MAIN SAFETY CONTROL)
-    max_pages = 5  # Start small and safe - increase gradually if needed
+    max_pages = 110  # Start small and safe - increase gradually if needed
     
     # Recommended settings:
     # max_pages = 5   # Very safe - good for testing
@@ -233,7 +316,7 @@ if __name__ == "__main__":
     if max_pages > 20:
         print("⚠️ WARNING: You're about to scrape more than 20 pages.")
         print("This may take several minutes and use more API credits.")
-        response = input("Continue? (y/N): ").lower().strip()
+        response = input("Continue? (Y/N): ").lower().strip()
         if response != 'y':
             print("❌ Scraping cancelled for safety.")
             exit()

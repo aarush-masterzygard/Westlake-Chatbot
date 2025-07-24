@@ -36,8 +36,8 @@ def check_api_key():
     # First try Streamlit secrets (check both possible locations)
     try:
         secrets_paths = [
-            "Source/.streamlit/secrets.toml",  # App-level (where Streamlit looks when running Source/7_Chatbot.py)
-            ".streamlit/secrets.toml"          # Root-level (backup)
+            ".streamlit/secrets.toml",         # Root-level (where Streamlit looks)
+            "Source/.streamlit/secrets.toml"   # App-level (backup)
         ]
         
         for secrets_path in secrets_paths:
@@ -67,14 +67,44 @@ def check_api_key():
     return True
 
 def check_vector_db():
-    """Check if vector database exists"""
-    if os.path.exists("index.faiss/index.faiss"):
-        print("✅ Vector database found")
-        return True
-    else:
-        print("❌ Vector database not found")
-        print("Run Source/6_LoadWebsiteData.py first to create the vector database")
-        return False
+    """Check if vector database exists in the correct location"""
+    # Check both possible locations
+    db_paths = [
+        "Source/index.faiss/index.faiss",  # New location
+        "index.faiss/index.faiss"          # Old location (fallback)
+    ]
+    
+    for db_path in db_paths:
+        if os.path.exists(db_path):
+            # Also check for the pickle file
+            pkl_path = os.path.join(os.path.dirname(db_path), "index.pkl")
+            if os.path.exists(pkl_path):
+                print(f"✅ Vector database found at {db_path}")
+                
+                # Get file sizes for verification
+                faiss_size = os.path.getsize(db_path)
+                pkl_size = os.path.getsize(pkl_path)
+                print(f"   📊 FAISS index: {faiss_size:,} bytes")
+                print(f"   📊 Metadata: {pkl_size:,} bytes")
+                
+                # Try to get vector count (basic validation)
+                try:
+                    import faiss
+                    index = faiss.read_index(db_path)
+                    print(f"   📊 Vector count: {index.ntotal:,} vectors")
+                except Exception as e:
+                    print(f"   ⚠️ Could not read vector count: {e}")
+                
+                return True
+            else:
+                print(f"⚠️ Found FAISS index but missing metadata file: {pkl_path}")
+    
+    print("❌ Vector database not found")
+    print("Expected locations:")
+    for path in db_paths:
+        print(f"  - {path}")
+    print("Run 'python Source/6_LoadWebsiteData.py' to create the vector database")
+    return False
 
 def main():
     print("🌊 Beachside Chatbot Deployment Check")

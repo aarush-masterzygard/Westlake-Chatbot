@@ -99,8 +99,27 @@ if not OPENAI_API_KEY or OPENAI_API_KEY == "your-openai-api-key-here":
     st.error("🚨 OpenAI API key not configured! Please check your secrets or environment variables.")
     st.stop()
 
-# Path to the prebuilt FAISS index
-index_Faiss_Filepath = "index.faiss"
+# Path to the prebuilt FAISS index - handle both running from root and Source directory
+import os
+
+def get_vector_db_path():
+    """Get the correct path to the vector database regardless of working directory"""
+    possible_paths = [
+        "index.faiss",           # When running from Source/ directory
+        "Source/index.faiss",    # When running from root directory
+        "../index.faiss"         # Alternative fallback
+    ]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            print(f"✅ Found vector database at: {path}")
+            return path
+    
+    # If none found, default to the most likely location
+    print("⚠️ Vector database not found in expected locations")
+    return "index.faiss"
+
+index_Faiss_Filepath = get_vector_db_path()
 
 @st.cache_resource
 def load_vector_database():
@@ -776,15 +795,23 @@ def add_custom_css():
     """, unsafe_allow_html=True)
 
 def display_chat_message(message, is_user=True, timestamp=None):
+    import html
+    
     # Generate timestamp if not provided
     if timestamp is None:
         timestamp = time.strftime("%I:%M %p")
+    
+    # Escape HTML in user messages to prevent HTML injection
+    if is_user:
+        escaped_message = html.escape(str(message))
+    else:
+        escaped_message = str(message)  # AI responses are already safe
         
     if is_user:
         st.markdown(f"""
         <div class="user-message">
             <strong>🧑 You:</strong><br>
-            {message}
+            {escaped_message}
             <div class="timestamp">{timestamp}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -792,7 +819,7 @@ def display_chat_message(message, is_user=True, timestamp=None):
         st.markdown(f"""
         <div class="ai-message">
             <strong>🤖 AI Assistant:</strong><br>
-            {message}
+            {escaped_message}
             <div class="timestamp">{timestamp}</div>
         </div>
         """, unsafe_allow_html=True)

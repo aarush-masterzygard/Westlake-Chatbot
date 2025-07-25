@@ -58,6 +58,14 @@ def initialize_session_state():
     # First time user flag for shortcuts
     if "first_time_user" not in st.session_state:
         st.session_state["first_time_user"] = True
+    # Pending question from recommendation buttons
+    if "pending_question" not in st.session_state:
+        st.session_state["pending_question"] = None
+    # Streaming animation flags
+    if "show_streaming" not in st.session_state:
+        st.session_state["show_streaming"] = False
+    if "streaming_response" not in st.session_state:
+        st.session_state["streaming_response"] = None
     
 st.set_page_config(
     page_title="🌊 Beachside AI Assistant", 
@@ -857,6 +865,7 @@ def main():
             # Update session state if toggle changed
             if dark_mode != st.session_state["dark_mode"]:
                 st.session_state["dark_mode"] = dark_mode
+                st.rerun()  # Immediately refresh to apply theme changes
         
         st.markdown("""
         <div class="sidebar-info">
@@ -963,6 +972,9 @@ def main():
             st.markdown('<div style="height: 30px;"></div>', unsafe_allow_html=True)
             send_button = st.form_submit_button("🚀 Send", use_container_width=True)
     
+    # Create a dedicated area for thinking indicator (always present)
+    thinking_placeholder = st.empty()
+    
     # Handle user input
     if send_button and user_input.strip():
         # Mark user as no longer first-time
@@ -971,8 +983,19 @@ def main():
         # Add user message to display
         st.session_state["messages"].append({"content": user_input, "is_user": True})
         
-        # Stream AI response for better UX
+        # Show thinking indicator in dedicated area
+        with thinking_placeholder:
+            st.markdown("""
+            <div style="text-align: center; padding: 10px; color: #666;">
+                🤔 <em>Thinking...</em>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Get AI response
         ai_response = stream_response(user_input)
+        
+        # Clear thinking indicator
+        thinking_placeholder.empty()
         
         # Update chat history for context
         st.session_state["chat_history"].extend([HumanMessage(content=user_input), ai_response])
@@ -993,46 +1016,113 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    # Display chat history
-    if st.session_state["messages"]:
-        st.markdown("### 💬 Conversation")
-        for msg in st.session_state["messages"]:
-            display_chat_message(msg["content"], msg["is_user"])
-    
-
-    
-    # Example questions for new users (without duplicate welcome message)
+    # Example questions for new users (show before chat history)
     if not st.session_state["messages"]:
-        # Example questions that users can click
-        st.markdown("<p style='text-align: center; margin-top: 20px;'><strong>Try one of these questions:</strong></p>", unsafe_allow_html=True)
+        # Simple instruction text for recommendations
+        st.markdown("""
+        <p style='text-align: center; margin: 20px 0;'>
+            I can help you find information about Beachside High School. Try one of these questions to get started:
+        </p>
+        """, unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         
-        # Define a helper function to process questions
-        def process_question(question):
-            # Add user message
-            st.session_state["messages"].append({"content": question, "is_user": True})
-            # Get AI response using robust call
-            with st.spinner("🤔 Thinking..."):
-                ai_msg = robust_ai_call(question)
-                ai_response = ai_msg["answer"]
-                st.session_state["chat_history"].extend([HumanMessage(content=question), ai_response])
-                st.session_state["messages"].append({"content": ai_response, "is_user": False})
-            st.rerun()
-        
         with col1:
             if st.button("Tell me about Beachside High School", key="q1", use_container_width=True):
-                process_question("Tell me about Beachside High School")
+                st.session_state["pending_question"] = "Tell me about Beachside High School"
+                st.rerun()
             
             if st.button("What programs does Beachside offer?", key="q3", use_container_width=True):
-                process_question("What academic programs does Beachside High School offer?")
+                st.session_state["pending_question"] = "What academic programs does Beachside High School offer?"
+                st.rerun()
         
         with col2:
             if st.button("How do I contact Beachside?", key="q2", use_container_width=True):
-                process_question("How can I contact Beachside High School?")
+                st.session_state["pending_question"] = "How can I contact Beachside High School?"
+                st.rerun()
             
             if st.button("What extracurricular activities are available?", key="q4", use_container_width=True):
-                process_question("What extracurricular activities and clubs are available at Beachside High School?")
+                st.session_state["pending_question"] = "What extracurricular activities and clubs are available at Beachside High School?"
+                st.rerun()
+    
+    # Handle pending question from recommendation buttons
+    if "pending_question" in st.session_state and st.session_state["pending_question"]:
+        question = st.session_state["pending_question"]
+        st.session_state["pending_question"] = None  # Clear the pending question
+        
+        # Add user message
+        st.session_state["messages"].append({"content": question, "is_user": True})
+        
+        # Show thinking indicator in the dedicated area
+        with thinking_placeholder:
+            st.markdown("""
+            <div style="text-align: center; padding: 10px; color: #666;">
+                🤔 <em>Thinking...</em>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Get AI response
+        ai_msg = robust_ai_call(question)
+        ai_response = ai_msg["answer"]
+        
+        # Clear thinking indicator
+        thinking_placeholder.empty()
+        
+        # Update chat history and messages
+        st.session_state["chat_history"].extend([HumanMessage(content=question), ai_response])
+        st.session_state["messages"].append({"content": ai_response, "is_user": False})
+        
+        # Set flag to show streaming animation
+        st.session_state["show_streaming"] = True
+        st.session_state["streaming_response"] = ai_response
+        
+        # Rerun to show the conversation with streaming
+        st.rerun()
+    
+    # Display chat history
+    if st.session_state["messages"]:
+        st.markdown("### 💬 Conversation")
+        
+        messages_to_show = st.session_state["messages"]
+        if "show_streaming" in st.session_state and st.session_state["show_streaming"]:
+            # Show all messages except the last AI response (which we'll stream)
+            for i, msg in enumerate(messages_to_show[:-1]):
+                display_chat_message(msg["content"], msg["is_user"])
+            
+            # Show streaming animation for the AI response
+            response_text = st.session_state["streaming_response"]
+            response_placeholder = st.empty()
+            
+            displayed_response = ""
+            for i, char in enumerate(response_text):
+                displayed_response += char
+                if i % 3 == 0:  # Update every 3 characters
+                    response_placeholder.markdown(f"""
+                    <div class="ai-message">
+                        <strong>🤖 AI Assistant:</strong><br>
+                        {displayed_response}▌
+                        <div class="timestamp">{time.strftime("%I:%M %p")}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    time.sleep(0.02)  # Small delay for streaming effect
+            
+            # Final display without cursor
+            response_placeholder.markdown(f"""
+            <div class="ai-message">
+                <strong>🤖 AI Assistant:</strong><br>
+                {displayed_response}
+                <div class="timestamp">{time.strftime("%I:%M %p")}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Clear streaming flags
+            st.session_state["show_streaming"] = False
+            st.session_state["streaming_response"] = None
+            
+        else:
+            # Normal display without streaming
+            for msg in messages_to_show:
+                display_chat_message(msg["content"], msg["is_user"])
 
 if __name__ == "__main__":
     main()

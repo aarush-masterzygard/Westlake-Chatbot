@@ -275,6 +275,7 @@ def main():
             # Update session state if toggle changed
             if dark_mode != st.session_state["dark_mode"]:
                 st.session_state["dark_mode"] = dark_mode
+                st.rerun()  # Immediately refresh to apply theme changes
         
         st.markdown("""
         <div class="sidebar-info">

@@ -2,15 +2,17 @@
 Environment/API-Key.env
 .env
 
-# Streamlit secrets
+# Streamlit secrets (NEVER commit API keys)
 Source/.streamlit/secrets.toml
 .streamlit/secrets.toml
 
-# Development/Setup files
+# Development/Setup files (not needed for deployment)
 test_api_key.py
 deploy.py
 API_KEY_SETUP.md
 count_links.py
+
+# Note: Source/index.faiss/ is NOT ignored - it contains the pre-built vector database needed for deployment
 
 # Python
 __pycache__/

@@ -71,6 +71,9 @@ def initialize_session_state():
         st.session_state["show_user_first"] = False
     if "pending_ai_input" not in st.session_state:
         st.session_state["pending_ai_input"] = None
+    # Hide recommendations flag
+    if "hide_recommendations" not in st.session_state:
+        st.session_state["hide_recommendations"] = False
     
 st.set_page_config(
     page_title="🌊 Beachside AI Assistant", 
@@ -704,12 +707,12 @@ def add_custom_css():
     <style>
     /* Base styles that apply to both themes */
     .main-header {{
-        padding: 2rem;
-        border-radius: 10px;
-        margin-bottom: 2rem;
+        padding: 1.2rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
         text-align: center;
         color: white;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }}
     
     .chat-container {{
@@ -910,9 +913,9 @@ def main():
     # Header
     st.markdown("""
     <div class="main-header">
-        <h1 style="margin-bottom: 2px;">🌊 Beachside AI Assistant</h1>
-        <h2 style="font-size: 1.4rem; margin: 2px 0 5px 0;">Developed by Aarush Rajkumar</h2>
-        <p style="margin-top: 5px;">Your intelligent companion for exploring website content</p>
+        <h1 style="margin-bottom: 8px; text-align: center; width: 100%; display: block;">🌊 Beachside AI Assistant</h1>
+        <h2 style="font-size: 1.4rem; margin: 8px 0 8px 0; text-align: center; width: 100%; display: block;">Developed by Aarush Rajkumar</h2>
+        <p style="margin-top: 8px; text-align: center; width: 100%; display: block; line-height: 1.4; max-width: 600px; margin-left: auto; margin-right: auto;">Your intelligent companion for exploring website content</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1083,6 +1086,54 @@ def main():
         font-size: 18px !important;
         font-weight: bold !important;
     }
+    
+    /* Remove button fade animation and make them disappear immediately */
+    .stButton button {
+        transition: none !important;
+        animation: none !important;
+    }
+    
+    /* Ensure buttons are fully clickable */
+    .stButton {
+        width: 100% !important;
+    }
+    
+    .stButton button {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 50px !important;
+        padding: 12px 16px !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        text-align: center !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Better header text alignment */
+    .main-header h1, .main-header h2, .main-header p {
+        text-align: center !important;
+        width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        display: block !important;
+        clear: both !important;
+    }
+    
+    .main-header {
+        text-align: center !important;
+        width: 100% !important;
+        display: block !important;
+        overflow: hidden !important;
+    }
+    
+    .main-header p {
+        max-width: 600px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding: 0 20px !important;
+    }
     </style>
     """, unsafe_allow_html=True)
     
@@ -1094,58 +1145,41 @@ def main():
     
     with chat_container:
         # Example questions for new users (show at top)
-        if not st.session_state["messages"]:
-            st.markdown("""
-            <p style='text-align: center; margin: 20px 0;'>
-                I can help you find information about Beachside High School. Try one of these questions to get started:
-            </p>
-            """, unsafe_allow_html=True)
+        if not st.session_state["messages"] and not st.session_state.get("hide_recommendations", False):
+            # Create a container for recommendations that can be cleared
+            recommendations_container = st.container()
             
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                # Custom HTML buttons with inline styling
-                if st.button("", key="q1_hidden", use_container_width=True):
-                    st.session_state["pending_question"] = "Tell me about Beachside High School"
-                    st.rerun()
-                
-                # Overlay custom styled text on the button
+            with recommendations_container:
                 st.markdown("""
-                <div style="margin-top: -65px; text-align: center; pointer-events: none; z-index: 10; position: relative;">
-                    <span style="font-size: 18px; font-weight: bold; color: white;">Tell me about Beachside High School</span>
-                </div>
+                <p style='text-align: center; margin: 20px 0;'>
+                    I can help you find information about Beachside High School. Try one of these questions to get started:
+                </p>
                 """, unsafe_allow_html=True)
                 
-                if st.button("", key="q3_hidden", use_container_width=True):
-                    st.session_state["pending_question"] = "What academic programs does Beachside High School offer?"
-                    st.rerun()
+                col1, col2 = st.columns(2)
                 
-                st.markdown("""
-                <div style="margin-top: -65px; text-align: center; pointer-events: none; z-index: 10; position: relative;">
-                    <span style="font-size: 18px; font-weight: bold; color: white;">What programs does Beachside offer?</span>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                if st.button("", key="q2_hidden", use_container_width=True):
-                    st.session_state["pending_question"] = "How can I contact Beachside High School?"
-                    st.rerun()
+                with col1:
+                    # Use direct button text instead of overlay approach
+                    if st.button("Tell me about Beachside High School", key="q1", use_container_width=True):
+                        st.session_state["hide_recommendations"] = True
+                        st.session_state["pending_question"] = "Tell me about Beachside High School"
+                        st.rerun()
+                    
+                    if st.button("What programs does Beachside offer?", key="q3", use_container_width=True):
+                        st.session_state["hide_recommendations"] = True
+                        st.session_state["pending_question"] = "What academic programs does Beachside High School offer?"
+                        st.rerun()
                 
-                st.markdown("""
-                <div style="margin-top: -65px; text-align: center; pointer-events: none; z-index: 10; position: relative;">
-                    <span style="font-size: 18px; font-weight: bold; color: white;">How do I contact Beachside?</span>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                if st.button("", key="q4_hidden", use_container_width=True):
-                    st.session_state["pending_question"] = "What extracurricular activities and clubs are available at Beachside High School?"
-                    st.rerun()
-                
-                st.markdown("""
-                <div style="margin-top: -65px; text-align: center; pointer-events: none; z-index: 10; position: relative;">
-                    <span style="font-size: 18px; font-weight: bold; color: white;">What extracurricular activities are available?</span>
-                </div>
-                """, unsafe_allow_html=True)
+                with col2:
+                    if st.button("How do I contact Beachside?", key="q2", use_container_width=True):
+                        st.session_state["hide_recommendations"] = True
+                        st.session_state["pending_question"] = "How can I contact Beachside High School?"
+                        st.rerun()
+                    
+                    if st.button("What extracurricular activities are available?", key="q4", use_container_width=True):
+                        st.session_state["hide_recommendations"] = True
+                        st.session_state["pending_question"] = "What extracurricular activities and clubs are available at Beachside High School?"
+                        st.rerun()
         
         # Display chat messages in scrollable container
         if st.session_state["messages"]:
@@ -1289,7 +1323,7 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    # Force button styling with multiple attempts
+    # Force button styling and immediate hiding behavior
     st.markdown("""
     <script>
     function forceButtonStyling() {
@@ -1305,23 +1339,81 @@ def main():
         selectors.forEach(function(selector) {
             var buttons = document.querySelectorAll(selector);
             buttons.forEach(function(button) {
-                button.style.fontSize = '20px !important';
+                button.style.fontSize = '18px !important';
                 button.style.fontWeight = 'bold !important';
-                button.style.setProperty('font-size', '20px', 'important');
+                button.style.setProperty('font-size', '18px', 'important');
+                
+                // Remove any transition/animation effects
+                button.style.transition = 'none !important';
+                button.style.animation = 'none !important';
+                
+                // Make buttons fully clickable
+                button.style.width = '100%';
+                button.style.height = 'auto';
+                button.style.minHeight = '50px';
+                button.style.padding = '12px 16px';
+                button.style.whiteSpace = 'normal';
+                button.style.wordWrap = 'break-word';
+                button.style.textAlign = 'center';
+                button.style.display = 'flex';
+                button.style.alignItems = 'center';
+                button.style.justifyContent = 'center';
             });
+        });
+    }
+    
+    function hideRecommendationButtons() {
+        // Find recommendation buttons and hide their container immediately
+        var buttons = document.querySelectorAll('button');
+        buttons.forEach(function(button) {
+            if (button.textContent.includes('Tell me about Beachside') || 
+                button.textContent.includes('What programs') ||
+                button.textContent.includes('How do I contact') ||
+                button.textContent.includes('What extracurricular')) {
+                
+                button.addEventListener('click', function() {
+                    // Hide the entire recommendations section immediately
+                    var container = button.closest('.stContainer');
+                    if (container) {
+                        container.style.display = 'none';
+                    }
+                    
+                    // Also try to hide parent containers
+                    var parent = button.closest('div[data-testid="column"]');
+                    if (parent) {
+                        var grandParent = parent.closest('.row-widget');
+                        if (grandParent) {
+                            grandParent.style.display = 'none';
+                        }
+                    }
+                });
+            }
         });
     }
     
     // Run immediately
     forceButtonStyling();
+    hideRecommendationButtons();
     
     // Run after delays
-    setTimeout(forceButtonStyling, 100);
-    setTimeout(forceButtonStyling, 500);
-    setTimeout(forceButtonStyling, 1000);
+    setTimeout(function() {
+        forceButtonStyling();
+        hideRecommendationButtons();
+    }, 100);
+    setTimeout(function() {
+        forceButtonStyling();
+        hideRecommendationButtons();
+    }, 500);
+    setTimeout(function() {
+        forceButtonStyling();
+        hideRecommendationButtons();
+    }, 1000);
     
     // Run on any DOM changes
-    var observer = new MutationObserver(forceButtonStyling);
+    var observer = new MutationObserver(function() {
+        forceButtonStyling();
+        hideRecommendationButtons();
+    });
     observer.observe(document.body, { childList: true, subtree: true });
     
     // Auto-scroll for messages

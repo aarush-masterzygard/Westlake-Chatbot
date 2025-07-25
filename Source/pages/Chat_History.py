@@ -239,7 +239,6 @@ def display_chat_message(message, is_user=True, timestamp=None):
     else:
         st.markdown(f"""
         <div class="ai-message">
-            <strong>🤖 AI Assistant:</strong><br>
             {message}
             <div class="timestamp">{timestamp}</div>
         </div>

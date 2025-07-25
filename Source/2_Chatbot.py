@@ -16,7 +16,7 @@ import streamlit as st
 import os
 import time
 
-# ⚡ PERFORMANCE OPTIMIZATIONS APPLIED:
+# ⚡ PERFORMANCE OPTIMIZATIONS:
 # 1. @st.cache_resource for vector database loading (expensive I/O operation)
 # 2. @st.cache_resource for LLM initialization (model loading)
 # 3. @st.cache_resource for retriever creation (chain setup)
@@ -66,12 +66,17 @@ def initialize_session_state():
         st.session_state["show_streaming"] = False
     if "streaming_response" not in st.session_state:
         st.session_state["streaming_response"] = None
+    # Sequential messaging flags
+    if "show_user_first" not in st.session_state:
+        st.session_state["show_user_first"] = False
+    if "pending_ai_input" not in st.session_state:
+        st.session_state["pending_ai_input"] = None
     
 st.set_page_config(
     page_title="🌊 Beachside AI Assistant", 
     page_icon="🌊",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # what is this line for?
@@ -112,20 +117,42 @@ import os
 
 def get_vector_db_path():
     """Get the correct path to the vector database regardless of working directory"""
+    print(f"🔍 Current working directory: {os.getcwd()}")
+    print(f"🔍 Files in current directory: {os.listdir('.')}")
+    
     possible_paths = [
         "index.faiss",           # When running from Source/ directory
         "Source/index.faiss",    # When running from root directory
-        "../index.faiss"         # Alternative fallback
+        "../index.faiss",        # Alternative fallback
+        "./index.faiss",         # Explicit current directory
+        os.path.join("Source", "index.faiss")  # Explicit join
     ]
     
     for path in possible_paths:
+        print(f"🔍 Checking path: {path}")
         if os.path.exists(path):
-            print(f"✅ Found vector database at: {path}")
-            return path
+            abs_path = os.path.abspath(path)
+            print(f"✅ Found vector database at: {path} (absolute: {abs_path})")
+            
+            # Check if the required files exist
+            faiss_file = os.path.join(path, "index.faiss")
+            pkl_file = os.path.join(path, "index.pkl")
+            print(f"🔍 FAISS file exists: {os.path.exists(faiss_file)} ({faiss_file})")
+            print(f"🔍 PKL file exists: {os.path.exists(pkl_file)} ({pkl_file})")
+            
+            if os.path.exists(faiss_file) and os.path.exists(pkl_file):
+                print(f"✅ Both database files found!")
+                return path
+            else:
+                print(f"⚠️ Database directory found but missing files")
     
-    # If none found, default to the most likely location
-    print("⚠️ Vector database not found in expected locations")
-    return "index.faiss"
+    # If none found, show detailed error
+    print("❌ Vector database not found in any expected locations")
+    print("🔍 Searched paths:")
+    for path in possible_paths:
+        print(f"   - {path} (exists: {os.path.exists(path)})")
+    
+    return "index.faiss"  # Default fallback
 
 index_Faiss_Filepath = get_vector_db_path()
 
@@ -135,14 +162,48 @@ def load_vector_database():
     Load the Vector Database from local disk with caching for better performance.
     This expensive operation only runs once and gets cached.
     """
-    return FAISS.load_local(
-        index_Faiss_Filepath, 
-        OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY, model="text-embedding-3-small"), 
-        allow_dangerous_deserialization=True
-    )
+    try:
+        print(f"🔄 Attempting to load vector database from: {index_Faiss_Filepath}")
+        
+        db = FAISS.load_local(
+            index_Faiss_Filepath, 
+            OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY, model="text-embedding-3-small"), 
+            allow_dangerous_deserialization=True
+        )
+        
+        # Verify the database loaded correctly
+        vector_count = db.index.ntotal if hasattr(db, 'index') else 0
+        print(f"✅ Vector database loaded successfully!")
+        print(f"📊 Vector count: {vector_count}")
+        
+        # Test a simple search to verify functionality
+        if vector_count > 0:
+            test_results = db.similarity_search("Beachside High School", k=1)
+            print(f"🔍 Test search returned {len(test_results)} results")
+            if test_results:
+                print(f"📄 Sample result length: {len(test_results[0].page_content)} characters")
+        
+        return db
+        
+    except Exception as e:
+        print(f"❌ Error loading vector database: {e}")
+        print(f"🔍 Error type: {type(e).__name__}")
+        
+        # Show Streamlit error for user visibility
+        st.error(f"🚨 Failed to load vector database: {str(e)}")
+        st.error("This may cause the chatbot to give generic responses instead of school-specific information.")
+        
+        # Return None or raise the error
+        raise e
 
 # Load the cached vector database
-db = load_vector_database()
+try:
+    db = load_vector_database()
+    vector_count = db.index.ntotal if hasattr(db, 'index') else 0
+    print(f"🎉 Database loaded with {vector_count} vectors")
+except Exception as e:
+    print(f"💥 Database loading failed: {e}")
+    db = None
 
 
 #Perform Sementic Search Of the Embeddings inside with the database you loaded --^
@@ -228,12 +289,20 @@ def create_rag_chain(_llm, _retriever, _prompt):
     retriever_with_history = create_history_aware_retriever(_llm, _retriever, _prompt)
     
     # QA system prompt
-    qa_system_prompt = """You are an assistant for question-answering tasks. \
-Use the following pieces of retrieved context to answer the question. \
-If you don't know the answer, just say that you don't know. \
-Use three sentences maximum and keep the answer concise.\
+    qa_system_prompt = """You are an AI assistant designed to answer questions 
+    using information retrieved from the Beachside High School website. 
+    Your goal is to provide clear, helpful, and accurate answers based 
+    only on the provided context. If the context does not contain the answer, 
+    respond politely by saying: 'This chatbot is still in its development phase 
+    and may not have information on that topic yet.' Use simple and easy-to-understand 
+    language. Provide detailed and informative answers, but only include information 
+    that is relevant and necessary. Limit responses to a maximum of 10 to 15 sentences, 
+    but do not extend the response unless the question requires it. Keep answers as short 
+    as possible while still being clear and helpful. Do not repeat the user's question or 
+    add unnecessary filler phrases. Focus on delivering the most useful information in a straightforward way.
 
 {context}"""
+
     
     qa_prompt = ChatPromptTemplate.from_messages([
         ("system", qa_system_prompt),
@@ -296,7 +365,7 @@ def stream_response(user_input):
             if i % 3 == 0:  # Update every 3 characters for smooth effect
                 response_placeholder.markdown(f"""
                 <div class="ai-message">
-                    <strong>🤖 AI Assistant:</strong><br>
+                    
                     {displayed_response}▌
                     <div class="timestamp">{time.strftime("%I:%M %p")}</div>
                 </div>
@@ -610,7 +679,7 @@ def stream_response(user_input):
             if i % 3 == 0:  # Update every 3 characters for smooth effect
                 response_placeholder.markdown(f"""
                 <div class="ai-message">
-                    <strong>🤖 AI Assistant:</strong><br>
+                    
                     {displayed_response}▌
                     <div class="timestamp">{time.strftime("%I:%M %p")}</div>
                 </div>
@@ -654,7 +723,7 @@ def add_custom_css():
         color: white;
         padding: 1rem;
         border-radius: 15px 15px 5px 15px;
-        margin: 0.5rem 0;
+        margin: 0.5rem 0 2rem 0;
         margin-left: 20%;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         position: relative;
@@ -664,7 +733,8 @@ def add_custom_css():
         color: white;
         padding: 1rem;
         border-radius: 15px 15px 15px 5px;
-        margin: 0.5rem 0;
+        margin: 0.5rem 0 2.5rem 0;
+        margin-left: 0;
         margin-right: 20%;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         position: relative;
@@ -818,7 +888,6 @@ def display_chat_message(message, is_user=True, timestamp=None):
     if is_user:
         st.markdown(f"""
         <div class="user-message">
-            <strong>🧑 You:</strong><br>
             {escaped_message}
             <div class="timestamp">{timestamp}</div>
         </div>
@@ -826,7 +895,6 @@ def display_chat_message(message, is_user=True, timestamp=None):
     else:
         st.markdown(f"""
         <div class="ai-message">
-            <strong>🤖 AI Assistant:</strong><br>
             {escaped_message}
             <div class="timestamp">{timestamp}</div>
         </div>
@@ -842,8 +910,9 @@ def main():
     # Header
     st.markdown("""
     <div class="main-header">
-        <h1>🌊 Beachside AI Assistant</h1>
-        <p>Your intelligent companion for exploring website content</p>
+        <h1 style="margin-bottom: 2px;">🌊 Beachside AI Assistant</h1>
+        <h2 style="font-size: 1.4rem; margin: 2px 0 5px 0;">Developed by Aarush Rajkumar</h2>
+        <p style="margin-top: 5px;">Your intelligent companion for exploring website content</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -879,6 +948,33 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
+        # Database status indicator
+        if db is not None:
+            try:
+                vector_count = db.index.ntotal if hasattr(db, 'index') else 0
+                st.markdown(f"""
+                <div class="sidebar-info">
+                    <h3>📊 Database Status</h3>
+                    <p>✅ Loaded: {vector_count:,} vectors</p>
+                    <p>📄 School data ready</p>
+                </div>
+                """, unsafe_allow_html=True)
+            except:
+                st.markdown("""
+                <div class="sidebar-info">
+                    <h3>📊 Database Status</h3>
+                    <p>⚠️ Database loaded but status unclear</p>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div class="sidebar-info">
+                <h3>📊 Database Status</h3>
+                <p>❌ Database not loaded</p>
+                <p>⚠️ Responses may be generic</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
         if st.button("🗑️ Clear Chat History"):
             st.session_state["chat_history"] = []
             st.session_state["messages"] = []
@@ -891,12 +987,27 @@ def main():
         st.markdown("• Reference previous messages in conversation")
         st.markdown("• Try asking for summaries or explanations")
     
-    # Create a container for the chat input area
-    chat_input_container = st.container()
-    
-    # Add custom CSS for better button styling
+    # Add CSS for chat layout with fixed input at bottom
     st.markdown("""
     <style>
+    /* Chat container styling */
+    .chat-messages-container {
+        max-height: 60vh;
+        overflow-y: auto;
+        padding: 1rem;
+        margin-bottom: 0;
+        border-radius: 10px;
+        background: rgba(0,0,0,0.02);
+    }
+    
+    /* Input area directly in flow */
+    .input-container {
+        background: white;
+        padding: 0.5rem 0;
+        border-top: 1px solid #e0e0e0;
+        margin-top: 0;
+    }
+    
     /* Style the button */
     .stButton button {
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
@@ -905,6 +1016,7 @@ def main():
         border: none;
         padding: 0.5rem 2rem;
         font-weight: bold;
+        font-size: 18px;
         transition: all 0.3s ease;
     }
     
@@ -914,146 +1026,232 @@ def main():
     }
     
     /* Style the input field */
-    .stTextInput > div > div > input {
-        border-radius: 25px;
-        padding: 0.5rem 1rem;
+    .stTextArea > div > div > textarea {
+        border-radius: 15px;
+        padding: 0.75rem 1rem;
         font-size: 16px;
-        outline: none !important;
-        box-shadow: none !important;
-        border: 2px solid #e0e0e0 !important;
+        resize: none;
+        font-family: inherit;
+        border: 2px solid #e0e0e0;
     }
     
-    /* Remove focus outline and style focus state */
-    .stTextInput > div > div > input:focus {
+    .stTextArea > div > div > textarea:focus {
         outline: none !important;
         box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3) !important;
         border: 2px solid #667eea !important;
     }
-    </style>
-    """, unsafe_allow_html=True)
     
-    # Add specific CSS to fix alignment
-    st.markdown("""
-    <style>
-    /* Remove conflicting margin and let the spacer div handle alignment */
+    /* Normal padding since input is in flow */
+    .main .block-container {
+        padding-bottom: 20px;
+    }
+    
+    /* Auto-scroll to bottom */
+    .chat-messages-container {
+        scroll-behavior: smooth;
+    }
+    
+    /* Ensure consistent height and alignment */
+    .stButton button {
+        height: 68px;  /* Match text area height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px !important;  /* Force larger font size */
+    }
+    
+    /* Align button with text area */
     div[data-testid="column"]:nth-child(2) .stButton {
         margin-top: 0px;
     }
     
-    /* Ensure consistent height */
-    .stTextInput input {
-        height: 40px;
+    /* Force larger font size for all buttons with more specific selectors */
+    .stButton > button {
+        font-size: 18px !important;
     }
     
-    .stButton button {
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    button[kind="primary"] {
+        font-size: 18px !important;
+    }
+    
+    button[data-testid="baseButton-primary"] {
+        font-size: 18px !important;
+    }
+    
+    /* Target recommendation buttons specifically */
+    div[data-testid="column"] .stButton button {
+        font-size: 18px !important;
+        font-weight: bold !important;
     }
     </style>
     """, unsafe_allow_html=True)
     
-    # Use form for proper Enter key handling
-    with st.form(key="chat_form", clear_on_submit=True):
-        # Create horizontal layout for input and button
-        col1, col2 = st.columns([5, 1])
-        
-        with col1:
-            user_input = st.text_area(
-                "", 
-                placeholder="💭 Ask me anything about the website...",
-                height=90,
-                key="user_input"
-            )
-        
-        with col2:
-            # Add a spacer div to align button with text area
-            st.markdown('<div style="height: 30px;"></div>', unsafe_allow_html=True)
-            send_button = st.form_submit_button("🚀 Send", use_container_width=True)
-    
-    # Create a dedicated area for thinking indicator (always present)
+    # Create thinking indicator area (define early so it can be used anywhere)
     thinking_placeholder = st.empty()
     
-    # Handle user input
-    if send_button and user_input.strip():
-        # Mark user as no longer first-time
-        st.session_state["first_time_user"] = False
-        
-        # Add user message to display
-        st.session_state["messages"].append({"content": user_input, "is_user": True})
-        
-        # Show thinking indicator in dedicated area
-        with thinking_placeholder:
+    # Create main chat area container
+    chat_container = st.container()
+    
+    with chat_container:
+        # Example questions for new users (show at top)
+        if not st.session_state["messages"]:
             st.markdown("""
-            <div style="text-align: center; padding: 10px; color: #666;">
-                🤔 <em>Thinking...</em>
-            </div>
+            <p style='text-align: center; margin: 20px 0;'>
+                I can help you find information about Beachside High School. Try one of these questions to get started:
+            </p>
             """, unsafe_allow_html=True)
-        
-        # Get AI response
-        ai_response = stream_response(user_input)
-        
-        # Clear thinking indicator
-        thinking_placeholder.empty()
-        
-        # Update chat history for context
-        st.session_state["chat_history"].extend([HumanMessage(content=user_input), ai_response])
-        
-        # Add AI response to display
-        st.session_state["messages"].append({"content": ai_response, "is_user": False})
-        
-        # Optimize session state to prevent memory issues
-        optimize_session_state()
-        
-        # Smart rerun with delay control
-        smart_rerun()
-    
-    # Show keyboard shortcuts (always visible)
-    st.markdown("""
-    <div class="shortcut-hints">
-        💡 <strong>Ctrl+Enter</strong> sends your message • <strong>Shift+Enter</strong> adds a new line
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Example questions for new users (show before chat history)
-    if not st.session_state["messages"]:
-        # Simple instruction text for recommendations
-        st.markdown("""
-        <p style='text-align: center; margin: 20px 0;'>
-            I can help you find information about Beachside High School. Try one of these questions to get started:
-        </p>
-        """, unsafe_allow_html=True)
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("Tell me about Beachside High School", key="q1", use_container_width=True):
-                st.session_state["pending_question"] = "Tell me about Beachside High School"
-                st.rerun()
             
-            if st.button("What programs does Beachside offer?", key="q3", use_container_width=True):
-                st.session_state["pending_question"] = "What academic programs does Beachside High School offer?"
-                st.rerun()
-        
-        with col2:
-            if st.button("How do I contact Beachside?", key="q2", use_container_width=True):
-                st.session_state["pending_question"] = "How can I contact Beachside High School?"
-                st.rerun()
+            col1, col2 = st.columns(2)
             
-            if st.button("What extracurricular activities are available?", key="q4", use_container_width=True):
-                st.session_state["pending_question"] = "What extracurricular activities and clubs are available at Beachside High School?"
-                st.rerun()
+            with col1:
+                # Custom HTML buttons with inline styling
+                if st.button("", key="q1_hidden", use_container_width=True):
+                    st.session_state["pending_question"] = "Tell me about Beachside High School"
+                    st.rerun()
+                
+                # Overlay custom styled text on the button
+                st.markdown("""
+                <div style="margin-top: -65px; text-align: center; pointer-events: none; z-index: 10; position: relative;">
+                    <span style="font-size: 18px; font-weight: bold; color: white;">Tell me about Beachside High School</span>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button("", key="q3_hidden", use_container_width=True):
+                    st.session_state["pending_question"] = "What academic programs does Beachside High School offer?"
+                    st.rerun()
+                
+                st.markdown("""
+                <div style="margin-top: -65px; text-align: center; pointer-events: none; z-index: 10; position: relative;">
+                    <span style="font-size: 18px; font-weight: bold; color: white;">What programs does Beachside offer?</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                if st.button("", key="q2_hidden", use_container_width=True):
+                    st.session_state["pending_question"] = "How can I contact Beachside High School?"
+                    st.rerun()
+                
+                st.markdown("""
+                <div style="margin-top: -65px; text-align: center; pointer-events: none; z-index: 10; position: relative;">
+                    <span style="font-size: 18px; font-weight: bold; color: white;">How do I contact Beachside?</span>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button("", key="q4_hidden", use_container_width=True):
+                    st.session_state["pending_question"] = "What extracurricular activities and clubs are available at Beachside High School?"
+                    st.rerun()
+                
+                st.markdown("""
+                <div style="margin-top: -65px; text-align: center; pointer-events: none; z-index: 10; position: relative;">
+                    <span style="font-size: 18px; font-weight: bold; color: white;">What extracurricular activities are available?</span>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        # Display chat messages in scrollable container
+        if st.session_state["messages"]:
+            # Create scrollable messages container
+            with st.container():
+                st.markdown('<div class="chat-messages-container">', unsafe_allow_html=True)
+                
+                messages_to_show = st.session_state["messages"]
+                
+                # Display all messages including streaming ones in their final position
+                for i, msg in enumerate(messages_to_show):
+                    if (i == len(messages_to_show) - 1 and 
+                        not msg["is_user"] and 
+                        "show_streaming" in st.session_state and 
+                        st.session_state["show_streaming"]):
+                        
+                        # This is the last AI message and we should stream it
+                        response_text = st.session_state["streaming_response"]
+                        response_placeholder = st.empty()
+                        
+                        displayed_response = ""
+                        for j, char in enumerate(response_text):
+                            displayed_response += char
+                            if j % 3 == 0:  # Update every 3 characters
+                                response_placeholder.markdown(f"""
+                                <div class="ai-message">
+                                    {displayed_response}▌
+                                    <div class="timestamp">{time.strftime("%I:%M %p")}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                time.sleep(0.02)  # Small delay for streaming effect
+                        
+                        # Final display without cursor
+                        response_placeholder.markdown(f"""
+                        <div class="ai-message">
+                            {displayed_response}
+                            <div class="timestamp">{time.strftime("%I:%M %p")}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Clear streaming flags
+                        st.session_state["show_streaming"] = False
+                        st.session_state["streaming_response"] = None
+                        
+                    else:
+                        # Normal message display
+                        display_chat_message(msg["content"], msg["is_user"])
+                
+                st.markdown('</div>', unsafe_allow_html=True)
     
     # Handle pending question from recommendation buttons
     if "pending_question" in st.session_state and st.session_state["pending_question"]:
         question = st.session_state["pending_question"]
         st.session_state["pending_question"] = None  # Clear the pending question
         
-        # Add user message
+        # Add user message FIRST (like real messaging)
         st.session_state["messages"].append({"content": question, "is_user": True})
         
-        # Show thinking indicator in the dedicated area
+        # Set up for AI response after showing user message
+        st.session_state["show_user_first"] = True
+        st.session_state["pending_ai_input"] = question
+        st.rerun()
+    
+    # Thinking indicator area (for when processing)
+    # Form handling logic moved to after form definition
+    
+    # Input form (always visible, outside conditional logic)
+    with st.form(key="chat_form", clear_on_submit=True):
+        col1, col2 = st.columns([5, 1])
+        
+        with col1:
+            user_input = st.text_area(
+                "", 
+                placeholder="💭 Ask me anything about the website...",
+                height=68,  # Minimum allowed height
+                key="user_input"
+            )
+        
+        with col2:
+            # Better alignment for send button
+            st.markdown('<div style="height: 22px;"></div>', unsafe_allow_html=True)
+            send_button = st.form_submit_button("🚀 Send", use_container_width=True)
+    
+    # Handle user input from text box
+    if send_button and user_input.strip():
+        # Mark user as no longer first-time
+        st.session_state["first_time_user"] = False
+        
+        # Clean input
+        clean_input = str(user_input).strip()
+        
+        # Add user message to display FIRST (like real messaging)
+        st.session_state["messages"].append({"content": clean_input, "is_user": True})
+        
+        # Force a rerun to show user message first
+        st.session_state["show_user_first"] = True
+        st.session_state["pending_ai_input"] = clean_input
+        st.rerun()
+    
+    # Handle AI response after user message is shown
+    if "show_user_first" in st.session_state and st.session_state["show_user_first"]:
+        st.session_state["show_user_first"] = False  # Clear flag
+        user_question = st.session_state["pending_ai_input"]
+        st.session_state["pending_ai_input"] = None
+        
+        # Show thinking indicator
         with thinking_placeholder:
             st.markdown("""
             <div style="text-align: center; padding: 10px; color: #666;">
@@ -1062,67 +1260,79 @@ def main():
             """, unsafe_allow_html=True)
         
         # Get AI response
-        ai_msg = robust_ai_call(question)
+        ai_msg = robust_ai_call(user_question)
         ai_response = ai_msg["answer"]
         
         # Clear thinking indicator
         thinking_placeholder.empty()
         
-        # Update chat history and messages
-        st.session_state["chat_history"].extend([HumanMessage(content=question), ai_response])
+        # Add AI response to messages (this will be streamed in place)
         st.session_state["messages"].append({"content": ai_response, "is_user": False})
         
-        # Set flag to show streaming animation
+        # Update chat history for context
+        st.session_state["chat_history"].extend([HumanMessage(content=user_question), ai_response])
+        
+        # Set flag to show streaming animation for the last message
         st.session_state["show_streaming"] = True
         st.session_state["streaming_response"] = ai_response
         
-        # Rerun to show the conversation with streaming
+        # Optimize session state to prevent memory issues
+        optimize_session_state()
+        
+        # Rerun to show AI response with streaming
         st.rerun()
     
-    # Display chat history
-    if st.session_state["messages"]:
-        st.markdown("### 💬 Conversation")
+    # Show keyboard shortcuts
+    st.markdown("""
+    <div style="text-align: center; margin-top: 10px; color: #666; font-size: 0.8rem;">
+        💡 <strong>Ctrl+Enter</strong> sends your message • <strong>Shift+Enter</strong> adds a new line
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Force button styling with multiple attempts
+    st.markdown("""
+    <script>
+    function forceButtonStyling() {
+        // Try multiple selectors
+        var selectors = [
+            '.stButton button',
+            'button[kind="primary"]',
+            'button[data-testid="baseButton-primary"]',
+            'button',
+            '.stButton > button'
+        ];
         
-        messages_to_show = st.session_state["messages"]
-        if "show_streaming" in st.session_state and st.session_state["show_streaming"]:
-            # Show all messages except the last AI response (which we'll stream)
-            for i, msg in enumerate(messages_to_show[:-1]):
-                display_chat_message(msg["content"], msg["is_user"])
-            
-            # Show streaming animation for the AI response
-            response_text = st.session_state["streaming_response"]
-            response_placeholder = st.empty()
-            
-            displayed_response = ""
-            for i, char in enumerate(response_text):
-                displayed_response += char
-                if i % 3 == 0:  # Update every 3 characters
-                    response_placeholder.markdown(f"""
-                    <div class="ai-message">
-                        <strong>🤖 AI Assistant:</strong><br>
-                        {displayed_response}▌
-                        <div class="timestamp">{time.strftime("%I:%M %p")}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    time.sleep(0.02)  # Small delay for streaming effect
-            
-            # Final display without cursor
-            response_placeholder.markdown(f"""
-            <div class="ai-message">
-                <strong>🤖 AI Assistant:</strong><br>
-                {displayed_response}
-                <div class="timestamp">{time.strftime("%I:%M %p")}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Clear streaming flags
-            st.session_state["show_streaming"] = False
-            st.session_state["streaming_response"] = None
-            
-        else:
-            # Normal display without streaming
-            for msg in messages_to_show:
-                display_chat_message(msg["content"], msg["is_user"])
+        selectors.forEach(function(selector) {
+            var buttons = document.querySelectorAll(selector);
+            buttons.forEach(function(button) {
+                button.style.fontSize = '20px !important';
+                button.style.fontWeight = 'bold !important';
+                button.style.setProperty('font-size', '20px', 'important');
+            });
+        });
+    }
+    
+    // Run immediately
+    forceButtonStyling();
+    
+    // Run after delays
+    setTimeout(forceButtonStyling, 100);
+    setTimeout(forceButtonStyling, 500);
+    setTimeout(forceButtonStyling, 1000);
+    
+    // Run on any DOM changes
+    var observer = new MutationObserver(forceButtonStyling);
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Auto-scroll for messages
+    setTimeout(function() {
+        var chatContainer = document.querySelector('.chat-messages-container');
+        if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    }, 100);
+    </script>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()

@@ -293,16 +293,21 @@ def create_rag_chain(_llm, _retriever, _prompt):
     
     # QA system prompt
     qa_system_prompt = """You are an AI assistant designed to answer questions 
-    using information retrieved from the Beachside High School website. 
+    using information retrieved from the Beachside High School website and PDF documents. 
     Your goal is to provide clear, helpful, and accurate answers based 
     only on the provided context. If the context does not contain the answer, 
     respond politely by saying: 'This chatbot is still in its development phase 
-    and may not have information on that topic yet.' Use simple and easy-to-understand 
-    language. Provide detailed and informative answers, but only include information 
-    that is relevant and necessary. Limit responses to a maximum of 10 to 15 sentences, 
-    but do not extend the response unless the question requires it. Keep answers as short 
-    as possible while still being clear and helpful. Do not repeat the user's question or 
-    add unnecessary filler phrases. Focus on delivering the most useful information in a straightforward way.
+    and may not have information on that topic yet.' 
+    
+    When referencing information from PDF documents, mention the source like: 
+    "According to the [filename] document..." or "As stated in the [filename] PDF..."
+    
+    Use simple and easy-to-understand language. Provide detailed and informative answers, 
+    but only include information that is relevant and necessary. Limit responses to a 
+    maximum of 10 to 15 sentences, but do not extend the response unless the question 
+    requires it. Keep answers as short as possible while still being clear and helpful. 
+    Do not repeat the user's question or add unnecessary filler phrases. Focus on 
+    delivering the most useful information in a straightforward way.
 
 {context}"""
 
@@ -1273,6 +1278,9 @@ def main():
         
         # Add user message to display FIRST (like real messaging)
         st.session_state["messages"].append({"content": clean_input, "is_user": True})
+        
+        # Clear any form-related flags to prevent duplication
+        st.session_state["form_submitted"] = True
         
         # Force a rerun to show user message first
         st.session_state["show_user_first"] = True

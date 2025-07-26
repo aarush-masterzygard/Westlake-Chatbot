@@ -74,6 +74,9 @@ def initialize_session_state():
     # Hide recommendations flag
     if "hide_recommendations" not in st.session_state:
         st.session_state["hide_recommendations"] = False
+    # Form submission flag to prevent duplication
+    if "form_submitted" not in st.session_state:
+        st.session_state["form_submitted"] = False
     
 st.set_page_config(
     page_title="🌊 Beachside AI Assistant", 
@@ -1251,22 +1254,48 @@ def main():
     # Thinking indicator area (for when processing)
     # Form handling logic moved to after form definition
     
-    # Input form (always visible, outside conditional logic)
-    with st.form(key="chat_form", clear_on_submit=True):
-        col1, col2 = st.columns([5, 1])
+    # Create input container that stays visible
+    input_container = st.container()
+    
+    with input_container:
+        # Check if we're currently processing
+        is_processing = st.session_state.get("show_user_first", False) or st.session_state.get("show_streaming", False)
         
-        with col1:
-            user_input = st.text_area(
-                "", 
-                placeholder="💭 Ask me anything about the website...",
-                height=68,  # Minimum allowed height
-                key="user_input"
-            )
-        
-        with col2:
-            # Better alignment for send button
-            st.markdown('<div style="height: 22px;"></div>', unsafe_allow_html=True)
-            send_button = st.form_submit_button("🚀 Send", use_container_width=True)
+        # Input form with unique key to prevent duplication
+        form_key = f"chat_form_{len(st.session_state.get('messages', []))}"
+        with st.form(key=form_key, clear_on_submit=True):
+            col1, col2 = st.columns([5, 1])
+            
+            with col1:
+                if is_processing:
+                    # Show disabled input during processing
+                    st.text_area(
+                        "", 
+                        value="Processing your message...",
+                        height=68,
+                        key="user_input_disabled",
+                        disabled=True
+                    )
+                    user_input = ""
+                else:
+                    # Show normal input when ready
+                    user_input = st.text_area(
+                        "", 
+                        placeholder="💭 Ask me anything about the website...",
+                        height=68,  # Minimum allowed height
+                        key="user_input"
+                    )
+            
+            with col2:
+                # Better alignment for send button
+                st.markdown('<div style="height: 22px;"></div>', unsafe_allow_html=True)
+                if is_processing:
+                    # Show disabled button during processing
+                    st.form_submit_button("⏳ Processing...", use_container_width=True, disabled=True)
+                    send_button = False
+                else:
+                    # Show normal button when ready
+                    send_button = st.form_submit_button("🚀 Send", use_container_width=True)
     
     # Handle user input from text box
     if send_button and user_input.strip():

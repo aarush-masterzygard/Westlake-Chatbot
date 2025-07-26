@@ -542,7 +542,7 @@ def load_and_process_website(base_url, max_pages=50, max_pdfs=10):
                     time.sleep(1)
             
             # Save the vector database
-            index_Faiss_Filepath = "Source/index.faiss"
+            index_Faiss_Filepath = "index.faiss"
             print(f"   💾 Saving vector database to {index_Faiss_Filepath}...")
             vectordb.save_local(index_Faiss_Filepath)
             

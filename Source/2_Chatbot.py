@@ -49,9 +49,11 @@ def initialize_session_state():
     # Generate a unique session ID
     if "user_id" not in st.session_state:
         st.session_state["user_id"] = str(time.time())
-    # Theme preference
+    # Theme preferences
     if "dark_mode" not in st.session_state:
-        st.session_state["dark_mode"] = False
+        st.session_state["dark_mode"] = True
+    if "beachside_theme" not in st.session_state:
+        st.session_state["beachside_theme"] = False
     # Smart rerun control
     if "last_rerun" not in st.session_state:
         st.session_state["last_rerun"] = 0
@@ -127,11 +129,11 @@ def get_vector_db_path():
     print(f"🔍 Files in current directory: {os.listdir('.')}")
     
     possible_paths = [
-        "index.faiss",           # When running from Source/ directory
-        "Source/index.faiss",    # When running from root directory
-        "../index.faiss",        # Alternative fallback
+        "index.faiss",           # Primary: Root directory (preferred)
         "./index.faiss",         # Explicit current directory
-        os.path.join("Source", "index.faiss")  # Explicit join
+        "../index.faiss",        # When running from subdirectory
+        "Source/index.faiss",    # Legacy: Source directory (fallback)
+        os.path.join("Source", "index.faiss")  # Explicit join fallback
     ]
     
     for path in possible_paths:
@@ -390,132 +392,314 @@ def stream_response(user_input):
     except Exception as e:
         return f"Sorry, I encountered an error: {str(e)[:100]}..."
 
-def get_theme_css(dark_mode):
+def get_theme_css(dark_mode, beachside_theme):
     """
-    Generate theme-specific CSS based on dark mode setting.
+    Generate theme-specific CSS based on dark mode and beachside theme settings.
     """
-    if dark_mode:
-        return """
-        body {
-            background-color: #1E1E1E;
-            color: #E0E0E0;
-        }
-        .main-header {
-            background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%);
-        }
-        .chat-container {
-            background: #2D2D2D;
-            color: #E0E0E0;
-        }
-        .user-message {
-            background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%);
-        }
-        .ai-message {
-            background: linear-gradient(135deg, #614385 0%, #516395 100%);
-        }
-        .timestamp {
-            color: #A0A0A0;
-        }
-        .welcome-container {
-            background: #2D2D2D;
-            border: 1px solid #3D3D3D;
-            color: #E0E0E0;
-        }
-        .welcome-container h2 {
-            color: #E0E0E0;
-        }
-        .welcome-container p {
-            color: #C0C0C0;
-        }
-        .stTextInput > div > div > input {
-            background-color: #3D3D3D;
-            color: #E0E0E0;
-            border: 2px solid #4B6CB7;
-        }
-        
-        .stTextArea > div > div > textarea {
-            background-color: #3D3D3D;
-            color: #E0E0E0;
-            border: 2px solid #4B6CB7;
-        }
-        
-        /* Dark mode sidebar styling */
-        .sidebar-info {
-            background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%) !important;
-            color: #E0E0E0 !important;
-        }
-        
-        /* Dark mode button styling */
-        .stButton > button {
-            background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%) !important;
-            color: #E0E0E0 !important;
-        }
-        
-        /* Dark mode sidebar background */
-        .stSidebar > div {
-            background-color: #2D2D2D;
-        }
-        
-        /* Dark mode sidebar text */
-        .stSidebar .stMarkdown {
-            color: #E0E0E0;
-        }
-        """
+    if beachside_theme:
+        # Beachside Theme Colors
+        if dark_mode:
+            # Beachside Dark Theme
+            return """
+            body {
+                background-color: #0A1A2A;
+                color: #E8F4F8;
+            }
+            .main-header {
+                background: linear-gradient(90deg, #1E3A5F 0%, #2C5F7F 100%);
+            }
+            .chat-container {
+                background: #1A2F3F;
+                color: #E8F4F8;
+            }
+            .user-message {
+                background: linear-gradient(135deg, #2C5F7F 0%, #1E3A5F 100%);
+            }
+            .ai-message {
+                background: linear-gradient(135deg, #3F7F9F 0%, #5F9FBF 100%);
+            }
+            .timestamp {
+                color: #B0D4E8;
+            }
+            .welcome-container {
+                background: #1A2F3F;
+                border: 1px solid #2C5F7F;
+                color: #E8F4F8;
+            }
+            .welcome-container h2 {
+                color: #E8F4F8;
+            }
+            .welcome-container p {
+                color: #D0E8F0;
+            }
+            .stTextInput > div > div > input {
+                background-color: #4A4A4A !important;
+                color: #FFFFFF !important;
+                border: 2px solid #3F7F9F;
+            }
+            
+            .stTextArea > div > div > textarea {
+                background-color: #4A4A4A !important;
+                color: #FFFFFF !important;
+                border: 2px solid #3F7F9F;
+            }
+            
+            /* Beachside dark mode sidebar styling */
+            .sidebar-info {
+                background: linear-gradient(135deg, #2C5F7F 0%, #1E3A5F 100%) !important;
+                color: #E8F4F8 !important;
+            }
+            
+            /* Beachside dark mode button styling */
+            .stButton > button {
+                background: linear-gradient(90deg, #2C5F7F 0%, #1E3A5F 100%) !important;
+                color: #FFFFFF !important;
+                border: none !important;
+            }
+            
+            /* Force button text color */
+            .stButton > button span {
+                color: #FFFFFF !important;
+            }
+            
+            /* Beachside dark mode sidebar background */
+            .stSidebar > div {
+                background: linear-gradient(180deg, #1E3A5F 0%, #2C5F7F 100%) !important;
+            }
+            
+            /* Beachside dark mode sidebar text */
+            .stSidebar .stMarkdown {
+                color: #E8F4F8;
+            }
+            """
+        else:
+            # Beachside Light Theme - Forest Green & Dark Teal
+            return """
+            body {
+                background-color: #FFFFFF !important;
+                color: #000000 !important;
+            }
+            .stApp {
+                background-color: #FFFFFF !important;
+            }
+            .main-header {
+                background: linear-gradient(90deg, #1FB25C 0%, #13635F 100%);
+                /* Previous green: background: linear-gradient(90deg, #25CF6D 0%, #13635F 100%); */
+            }
+            .chat-container {
+                background: #FFFFFF;
+            }
+            .user-message {
+                background: linear-gradient(135deg, #1FB25C 0%, #13635F 100%);
+                /* Previous green: background: linear-gradient(135deg, #25CF6D 0%, #13635F 100%); */
+            }
+            .ai-message {
+                background: linear-gradient(135deg, #13635F 0%, #22B3AB 100%);
+            }
+            .timestamp {
+                color: #2F4F4F;
+            }
+            .welcome-container {
+                background: #FFFFFF;
+                border: 1px solid #13635F;
+                color: #000000;
+            }
+            .welcome-container h2 {
+                color: #000000;
+            }
+            .welcome-container p {
+                color: #000000;
+            }
+            .stTextInput > div > div > input {
+                border: 2px solid #1FB25C;
+                /* Previous green: border: 2px solid #25CF6D; */
+                background-color: #4A4A4A !important;
+                color: #FFFFFF !important;
+            }
+            
+            .stTextArea > div > div > textarea {
+                border: 2px solid #1FB25C;
+                /* Previous green: border: 2px solid #25CF6D; */
+                background-color: #4A4A4A !important;
+                color: #FFFFFF !important;
+            }
+            
+            /* Beachside light mode sidebar styling */
+            .stSidebar > div {
+                background: linear-gradient(180deg, #1FB25C 0%, #13635F 100%) !important;
+                /* Previous green: background: linear-gradient(180deg, #25CF6D 0%, #13635F 100%) !important; */
+            }
+            .stSidebar .stMarkdown {
+                color: #FFFFFF !important;
+            }
+            .sidebar-info {
+                background: linear-gradient(135deg, #1FB25C 0%, #13635F 100%) !important;
+                /* Previous green: background: linear-gradient(135deg, #25CF6D 0%, #13635F 100%) !important; */
+                color: white !important;
+            }
+            
+            /* Beachside light mode button styling */
+            .stButton > button {
+                background: linear-gradient(90deg, #1FB25C 0%, #13635F 100%) !important;
+                /* Previous green: background: linear-gradient(90deg, #25CF6D 0%, #13635F 100%) !important; */
+                color: #FFFFFF !important;
+                border: none !important;
+            }
+            
+            /* Force button text color */
+            .stButton > button span {
+                color: #FFFFFF !important;
+            }
+            """
     else:
-        return """
-        body {
-            background-color: #FFFFFF;
-            color: #333333;
-        }
-        .main-header {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        }
-        .chat-container {
-            background: #f8f9fa;
-        }
-        .user-message {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .ai-message {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        .timestamp {
-            color: #888888;
-        }
-        .welcome-container {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            color: #333333;
-        }
-        .welcome-container h2 {
-            color: #333333;
-        }
-        .welcome-container p {
-            color: #555555;
-        }
-        .stTextInput > div > div > input {
-            border: 2px solid #667eea;
-        }
-        
-        .stTextArea > div > div > textarea {
-            border: 2px solid #667eea;
-        }
-        
-        /* Light mode sidebar styling */
-        .sidebar-info {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-        }
-        
-        /* Light mode button styling */
-        .stButton > button {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-        }
-        
-        /* Light mode sidebar - keep default Streamlit styling */
-        """
-def get_theme_css(dark_mode):
+        # Original Theme Colors
+        if dark_mode:
+            # Original Dark Theme
+            return """
+            body {
+                background-color: #1E1E1E;
+                color: #E0E0E0;
+            }
+            .main-header {
+                background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%);
+            }
+            .chat-container {
+                background: #2D2D2D;
+                color: #E0E0E0;
+            }
+            .user-message {
+                background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%);
+            }
+            .ai-message {
+                background: linear-gradient(135deg, #614385 0%, #516395 100%);
+            }
+            .timestamp {
+                color: #A0A0A0;
+            }
+            .welcome-container {
+                background: #2D2D2D;
+                border: 1px solid #3D3D3D;
+                color: #E0E0E0;
+            }
+            .welcome-container h2 {
+                color: #E0E0E0;
+            }
+            .welcome-container p {
+                color: #C0C0C0;
+            }
+            .stTextInput > div > div > input {
+                background-color: #4A4A4A !important;
+                color: #FFFFFF !important;
+                border: 2px solid #4B6CB7;
+            }
+            
+            .stTextArea > div > div > textarea {
+                background-color: #4A4A4A !important;
+                color: #FFFFFF !important;
+                border: 2px solid #4B6CB7;
+            }
+            
+            /* Dark mode sidebar styling */
+            .sidebar-info {
+                background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%) !important;
+                color: #E0E0E0 !important;
+            }
+            
+            /* Dark mode button styling */
+            .stButton > button {
+                background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%) !important;
+                color: #FFFFFF !important;
+                border: none !important;
+            }
+            
+            /* Force button text color */
+            .stButton > button span {
+                color: #FFFFFF !important;
+            }
+            
+            /* Original dark mode sidebar background */
+            .stSidebar > div {
+                background: linear-gradient(180deg, #4B6CB7 0%, #182848 100%) !important;
+            }
+            
+            /* Dark mode sidebar text */
+            .stSidebar .stMarkdown {
+                color: #E0E0E0;
+            }
+            """
+        else:
+            # Original Light Theme (with white background)
+            return """
+            body {
+                background-color: #FFFFFF !important;
+                color: #000000 !important;
+            }
+            .stApp {
+                background-color: #FFFFFF !important;
+            }
+            .main-header {
+                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            }
+            .chat-container {
+                background: #FFFFFF;
+            }
+            .user-message {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            .ai-message {
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            }
+            .timestamp {
+                color: #888888;
+            }
+            .welcome-container {
+                background: #FFFFFF;
+                border: 1px solid #e9ecef;
+                color: #000000;
+            }
+            .welcome-container h2 {
+                color: #000000;
+            }
+            .welcome-container p {
+                color: #000000;
+            }
+            .stTextInput > div > div > input {
+                border: 2px solid #667eea;
+                background-color: #4A4A4A !important;
+                color: #FFFFFF !important;
+            }
+            
+            .stTextArea > div > div > textarea {
+                border: 2px solid #667eea;
+                background-color: #4A4A4A !important;
+                color: #FFFFFF !important;
+            }
+            
+            /* Original light mode sidebar styling */
+            .stSidebar > div {
+                background: linear-gradient(180deg, #667eea 0%, #764ba2 100%) !important;
+            }
+            .stSidebar .stMarkdown {
+                color: #FFFFFF !important;
+            }
+            .sidebar-info {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                color: white !important;
+            }
+            
+            /* Light mode button styling */
+            .stButton > button {
+                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
+                color: #FFFFFF !important;
+                border: none !important;
+            }
+            
+            /* Force button text color */
+            .stButton > button span {
+                color: #FFFFFF !important;
+            }
+            """
+
     """
     Generate theme-specific CSS with caching based on dark mode setting.
     """
@@ -709,7 +893,7 @@ def add_custom_css():
     Add custom CSS with proper theme switching for all elements.
     """
     # Get theme CSS based on current mode (no caching to allow theme switching)
-    theme_css = get_theme_css(st.session_state["dark_mode"])
+    theme_css = get_theme_css(st.session_state["dark_mode"], st.session_state["beachside_theme"])
     
     st.markdown(f"""
     <style>
@@ -936,15 +1120,28 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        col1, col2 = st.columns([1, 2])
+        # Dark Mode Toggle
+        col1, col2 = st.columns([1.2, 1.8])
         with col1:
-            st.write("Theme:")
+            st.markdown("**Mode:**")
         with col2:
             # Use the toggle with a key that triggers rerun
             dark_mode = st.toggle("Dark Mode", value=st.session_state["dark_mode"], key="dark_mode_toggle")
             # Update session state if toggle changed
             if dark_mode != st.session_state["dark_mode"]:
                 st.session_state["dark_mode"] = dark_mode
+                st.rerun()  # Immediately refresh to apply theme changes
+        
+        # Beachside Theme Toggle
+        col3, col4 = st.columns([1.2, 1.8])
+        with col3:
+            st.markdown("**Style:**")
+        with col4:
+            # Beachside theme toggle
+            beachside_theme = st.toggle("Beachside Theme", value=st.session_state["beachside_theme"], key="beachside_theme_toggle")
+            # Update session state if toggle changed
+            if beachside_theme != st.session_state["beachside_theme"]:
+                st.session_state["beachside_theme"] = beachside_theme
                 st.rerun()  # Immediately refresh to apply theme changes
         
         st.markdown("""
@@ -1062,13 +1259,22 @@ def main():
         scroll-behavior: smooth;
     }
     
+    /* ORIGINAL WORKING BUTTON APPROACH - RESTORED */
+    
     /* Ensure consistent height and alignment */
     .stButton button {
-        height: 68px;  /* Match text area height */
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        height: 68px !important;  /* Match text area height */
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         font-size: 18px !important;  /* Force larger font size */
+        color: #FFFFFF !important;
+        border: none !important;
+    }
+    
+    /* Force button text to be white */
+    .stButton button span {
+        color: #FFFFFF !important;
     }
     
     /* Align button with text area */
@@ -1287,7 +1493,7 @@ def main():
                     )
             
             with col2:
-                # Better alignment for send button
+                # Better alignment for send button (RESTORED)
                 st.markdown('<div style="height: 22px;"></div>', unsafe_allow_html=True)
                 if is_processing:
                     # Show disabled button during processing

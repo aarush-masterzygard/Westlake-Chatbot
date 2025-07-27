@@ -1351,11 +1351,11 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # Create thinking indicator area (define early so it can be used anywhere)
-    thinking_placeholder = st.empty()
-    
     # Create main chat area container
     chat_container = st.container()
+    
+    # Create thinking indicator area (define early so it can be used anywhere)
+    thinking_placeholder = st.empty()
     
     with chat_container:
         # Example questions for new users (show at top)
@@ -1457,15 +1457,31 @@ def main():
         st.session_state["pending_ai_input"] = question
         st.rerun()
     
-    # Thinking indicator area (for when processing)
-    # Form handling logic moved to after form definition
-    
-    # Create input container that stays visible
-    input_container = st.container()
-    
-    with input_container:
+    # Create input container that stays visible (minimal spacing)
+    with st.container():
         # Check if we're currently processing
         is_processing = st.session_state.get("show_user_first", False) or st.session_state.get("show_streaming", False)
+        
+        # Add CSS to reduce spacing above text input
+        st.markdown("""
+        <style>
+        /* Reduce spacing above text input */
+        .stForm {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+        
+        .stTextArea {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+        
+        /* Reduce container spacing */
+        .stContainer {
+            padding-top: 0 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
         
         # Input form with unique key to prevent duplication
         form_key = f"chat_form_{len(st.session_state.get('messages', []))}"

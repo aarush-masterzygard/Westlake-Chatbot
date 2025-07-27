@@ -1493,9 +1493,8 @@ def main():
                     )
             
             with col2:
-                # Better alignment for send button (RESTORED) - Adjusted down slightly
+                # Better alignment for send button (RESTORED)
                 st.markdown('<div style="height: 28px;"></div>', unsafe_allow_html=True)
-                # Previous alignment: st.markdown('<div style="height: 22px;"></div>', unsafe_allow_html=True)
                 if is_processing:
                     # Show disabled button during processing
                     st.form_submit_button("⏳ Processing...", use_container_width=True, disabled=True)

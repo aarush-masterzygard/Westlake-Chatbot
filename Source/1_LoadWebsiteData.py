@@ -63,11 +63,11 @@ base_url = beachside_url (for Beachside High School)
 '''
 
 # PDF Processing Configuration
-PDF_SIZE_LIMIT = 10 * 1024 * 1024  # 10MB per PDF
-TOTAL_PDF_LIMIT = 50 * 1024 * 1024  # 50MB total across all PDFs
+PDF_SIZE_LIMIT = 15 * 1024 * 1024  # 15MB per PDF (increased to handle largest file)
+TOTAL_PDF_LIMIT = 100 * 1024 * 1024  # 100MB total across all PDFs (increased for comprehensive processing)
 MAX_PAGES_PER_PDF = 100  # Maximum pages to process per PDF
 PDF_CHUNK_SIZE = 1000  # Characters per chunk for PDF content
-MAX_PDFS_TO_PROCESS = 10  # Maximum number of PDFs to process
+MAX_PDFS_TO_PROCESS = 100  # Process all PDFs found (was 10)
 
 def find_pdf_links(base_url, all_urls):
     """

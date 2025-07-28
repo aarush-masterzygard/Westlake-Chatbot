@@ -433,15 +433,28 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #D0E8F0;
             }
             .stTextInput > div > div > input {
-                background-color: #4A4A4A !important;
-                color: #FFFFFF !important;
+                background-color: #1a3a4a !important;
+                color: #E8F4F8 !important;
                 border: 2px solid #3F7F9F;
+                caret-color: #E8F4F8 !important;
             }
             
             .stTextArea > div > div > textarea {
-                background-color: #4A4A4A !important;
-                color: #FFFFFF !important;
+                background-color: #1a3a4a !important;
+                color: #E8F4F8 !important;
                 border: 2px solid #3F7F9F;
+                caret-color: #E8F4F8 !important;
+            }
+            
+            /* Beachside dark mode placeholder text */
+            .stTextInput > div > div > input::placeholder {
+                color: #E8F4F8 !important;
+                opacity: 0.7 !important;
+            }
+            
+            .stTextArea > div > div > textarea::placeholder {
+                color: #E8F4F8 !important;
+                opacity: 0.7 !important;
             }
             
             /* Beachside dark mode sidebar styling */
@@ -510,14 +523,27 @@ def get_theme_css(dark_mode, beachside_theme):
             }
             .stTextInput > div > div > input {
                 border: 2px solid #6aba45;
-                background-color: #4A4A4A !important;
-                color: #FFFFFF !important;
+                background-color: #e8f5e8 !important;
+                color: #0f2b42 !important;
+                caret-color: #0f2b42 !important;
             }
             
             .stTextArea > div > div > textarea {
                 border: 2px solid #6aba45;
-                background-color: #4A4A4A !important;
-                color: #FFFFFF !important;
+                background-color: #e8f5e8 !important;
+                color: #0f2b42 !important;
+                caret-color: #0f2b42 !important;
+            }
+            
+            /* Beachside light mode placeholder text */
+            .stTextInput > div > div > input::placeholder {
+                color: #0f2b42 !important;
+                opacity: 0.7 !important;
+            }
+            
+            .stTextArea > div > div > textarea::placeholder {
+                color: #0f2b42 !important;
+                opacity: 0.7 !important;
             }
             
             /* Beachside light mode sidebar styling */

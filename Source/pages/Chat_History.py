@@ -446,7 +446,7 @@ def main():
             st.rerun()
         
         if st.button("⬅️ Back to Chat"):
-            st.switch_page("2_Chatbot.py")
+            st.switch_page("2_AI_Assistant.py")
     
     # Display chat history
     if "chat_history" in st.session_state and st.session_state["chat_history"]:
@@ -509,7 +509,7 @@ def main():
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
             if st.button("🚀 Start Chatting", use_container_width=True):
-                st.switch_page("2_Chatbot.py")
+                st.switch_page("2_AI_Assistant.py")
 
 if __name__ == "__main__":
     main()

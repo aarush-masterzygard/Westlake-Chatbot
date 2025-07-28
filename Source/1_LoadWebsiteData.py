@@ -106,7 +106,7 @@ def find_pdf_links(base_url, all_urls):
                     pdf_links.add(full_pdf_url)
                     print(f"   📄 Found PDF (regex): {full_pdf_url}")
             
-            time.sleep(0.5)  # Be respectful
+            time.sleep(2.0)  # Be respectful - increased delay between web page scraping
             
         except Exception as e:
             print(f"   ⚠️ Error scanning {url}: {e}")
@@ -125,7 +125,7 @@ def download_and_process_pdf(pdf_url, max_size=PDF_SIZE_LIMIT):
         print(f"   🔄 Step 1: Checking PDF size...")
         
         # Check PDF size before downloading
-        head_response = requests.head(pdf_url, timeout=10)
+        head_response = requests.head(pdf_url, timeout=30)
         content_length = head_response.headers.get('content-length')
         
         if content_length:
@@ -138,9 +138,20 @@ def download_and_process_pdf(pdf_url, max_size=PDF_SIZE_LIMIT):
             print(f"   ⚠️ Could not determine PDF size, proceeding with download...")
         
         print(f"   🔄 Step 2: Downloading PDF...")
-        # Download the PDF
-        response = requests.get(pdf_url, timeout=30)
-        response.raise_for_status()
+        # Download the PDF with longer timeout and retry logic
+        max_retries = 2
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(pdf_url, timeout=60)  # Increased to 60 seconds
+                response.raise_for_status()
+                break
+            except requests.exceptions.Timeout:
+                if attempt < max_retries - 1:
+                    print(f"   ⚠️ Timeout on attempt {attempt + 1}, retrying...")
+                    time.sleep(2)
+                    continue
+                else:
+                    raise
         print(f"   ✅ Download completed: {len(response.content)/1024:.1f}KB")
         
         # Create temporary file
@@ -297,6 +308,10 @@ def process_all_pdfs(pdf_links, max_pdfs_limit=MAX_PDFS_TO_PROCESS):
         else:
             failed_pdfs += 1
             print(f"   ❌ FAILED: Could not process {filename}")
+        
+        # Add delay between PDF processing to be respectful to the server
+        if i < len(pdfs_to_process):  # Don't delay after the last PDF
+            time.sleep(5)  # Increased delay between PDF processing
     
     print(f"\n" + "=" * 60)
     print(f"📊 PDF Processing Complete!")
@@ -355,7 +370,7 @@ def get_all_links(base_url, max_pages=50):
                         if '#' not in full_url and full_url not in visited and full_url not in to_visit:
                             to_visit.append(full_url)
             
-            # Be respectful - small delay between requests
+            # Be respectful - increased delay between wets
             time.sleep(1)
             
         except Exception as e:
@@ -579,10 +594,10 @@ if __name__ == "__main__":
     # =====================================================
     
     # Number of pages to scrape (MAIN SAFETY CONTROL)
-    max_pages = 110  # Start small and safe - increase gradually if needed
+    max_pages = 120  # Start small and safe - increase gradually if needed
     
     # PDF Processing limits
-    max_pdfs = 110  # Number of PDFs to process (start small!)
+    max_pdfs = 150  # Number of PDFs to process (reduced for better reliability)
     
     # Recommended settings:
     # max_pages = 5   # Very safe - good for testing

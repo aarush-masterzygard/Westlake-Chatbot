@@ -313,14 +313,6 @@ Ask the chatbot questions like:
 - **Error Recovery**: Robust error handling with retries
 - **Mobile Responsive**: Works on all device sizes
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
 ## 📄 License
 
 This project is for educational purposes. Please respect the school's website terms of use.

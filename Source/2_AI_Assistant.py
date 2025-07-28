@@ -15,6 +15,7 @@ from langchain_core.messages import HumanMessage
 import streamlit as st
 import os
 import time
+import html
 
 # ⚡ PERFORMANCE OPTIMIZATIONS:
 # 1. @st.cache_resource for vector database loading (expensive I/O operation)
@@ -380,10 +381,11 @@ def stream_response(user_input):
         for i, char in enumerate(full_response):
             displayed_response += char
             if i % 3 == 0:  # Update every 3 characters for smooth effect
+                escaped_response = html.escape(displayed_response)
                 response_placeholder.markdown(f"""
                 <div class="ai-message">
                     
-                    {displayed_response}▌
+                    {escaped_response}▌
                     <div class="timestamp">{time.strftime("%I:%M %p")}</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -847,68 +849,6 @@ def get_theme_css(dark_mode, beachside_theme):
 
 
 
-def smart_rerun():
-    """Only rerun when necessary to prevent UI lag"""
-    current_time = time.time()
-    if current_time - st.session_state["last_rerun"] < 1.35:  # 1.35 second delay
-        return False
-    
-    st.session_state["last_rerun"] = current_time
-    st.rerun()
-    return True
-
-@st.cache_resource
-def get_connection_pool():
-    """Reuse HTTP connections for better performance"""
-    import requests
-    session = requests.Session()
-    session.headers.update({'User-Agent': 'Beachside-Chatbot/1.0'})
-    return session
-
-def robust_ai_call(user_input, max_retries=3):
-    """Retry failed API calls for better reliability"""
-    components = get_lazy_components()  # Load components when needed
-    
-    for attempt in range(max_retries):
-        try:
-            return components['rag_chain'].invoke({
-                "input": user_input, 
-                "chat_history": st.session_state["chat_history"]
-            })
-        except Exception as e:
-            if attempt == max_retries - 1:
-                return {"answer": f"Sorry, I'm having trouble right now. Please try again. (Error: {str(e)[:50]}...)"}
-            time.sleep(1)  # Brief delay before retry
-
-def stream_response(user_input):
-    """Stream AI response for better perceived performance"""
-    response_placeholder = st.empty()
-    
-    try:
-        # Get AI response with error recovery
-        ai_msg = robust_ai_call(user_input)
-        full_response = ai_msg["answer"]
-        
-        # Simulate streaming effect
-        displayed_response = ""
-        for i, char in enumerate(full_response):
-            displayed_response += char
-            if i % 3 == 0:  # Update every 3 characters for smooth effect
-                response_placeholder.markdown(f"""
-                <div class="ai-message">
-                    
-                    {displayed_response}▌
-                    <div class="timestamp">{time.strftime("%I:%M %p")}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                time.sleep(0.02)  # Small delay for streaming effect
-        
-        # Final display without cursor
-        response_placeholder.empty()
-        return full_response
-        
-    except Exception as e:
-        return f"Sorry, I encountered an error: {str(e)[:100]}..."
 
 def add_custom_css():
     """
@@ -1090,7 +1030,6 @@ def add_custom_css():
     """, unsafe_allow_html=True)
 
 def display_chat_message(message, is_user=True, timestamp=None):
-    import html
     
     # Generate timestamp if not provided
     if timestamp is None:
@@ -1100,7 +1039,7 @@ def display_chat_message(message, is_user=True, timestamp=None):
     if is_user:
         escaped_message = html.escape(str(message))
     else:
-        escaped_message = str(message)  # AI responses are already safe
+        escaped_message = html.escape(str(message))  # Escape AI responses to prevent HTML interference
         
     if is_user:
         st.markdown(f"""
@@ -1457,18 +1396,20 @@ def main():
                         for j, char in enumerate(response_text):
                             displayed_response += char
                             if j % 3 == 0:  # Update every 3 characters
+                                escaped_response = html.escape(displayed_response)
                                 response_placeholder.markdown(f"""
                                 <div class="ai-message">
-                                    {displayed_response}▌
+                                    {escaped_response}▌
                                     <div class="timestamp">{time.strftime("%I:%M %p")}</div>
                                 </div>
                                 """, unsafe_allow_html=True)
                                 time.sleep(0.02)  # Small delay for streaming effect
                         
                         # Final display without cursor
+                        escaped_final_response = html.escape(displayed_response)
                         response_placeholder.markdown(f"""
                         <div class="ai-message">
-                            {displayed_response}
+                            {escaped_final_response}
                             <div class="timestamp">{time.strftime("%I:%M %p")}</div>
                         </div>
                         """, unsafe_allow_html=True)

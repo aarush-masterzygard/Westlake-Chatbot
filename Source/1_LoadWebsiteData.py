@@ -579,10 +579,10 @@ if __name__ == "__main__":
     # =====================================================
     
     # Number of pages to scrape (MAIN SAFETY CONTROL)
-    max_pages = 20  # Start small and safe - increase gradually if needed
+    max_pages = 110  # Start small and safe - increase gradually if needed
     
     # PDF Processing limits
-    max_pdfs = 50  # Number of PDFs to process (start small!)
+    max_pdfs = 110  # Number of PDFs to process (start small!)
     
     # Recommended settings:
     # max_pages = 5   # Very safe - good for testing

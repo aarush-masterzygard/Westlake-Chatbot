@@ -10,11 +10,11 @@ st.set_page_config(
 )
 
 def initialize_session_state():
-    # Theme preferences
+    # Theme preferences - Default to Beachside Light Mode
     if "dark_mode" not in st.session_state:
-        st.session_state["dark_mode"] = True
+        st.session_state["dark_mode"] = False
     if "beachside_theme" not in st.session_state:
-        st.session_state["beachside_theme"] = False
+        st.session_state["beachside_theme"] = True
     # Chat history for display
     if "chat_history" not in st.session_state:
         st.session_state["chat_history"] = []

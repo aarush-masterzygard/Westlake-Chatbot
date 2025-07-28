@@ -49,11 +49,11 @@ def initialize_session_state():
     # Generate a unique session ID
     if "user_id" not in st.session_state:
         st.session_state["user_id"] = str(time.time())
-    # Theme preferences
+    # Theme preferences - Default to Beachside Light Mode
     if "dark_mode" not in st.session_state:
-        st.session_state["dark_mode"] = True
+        st.session_state["dark_mode"] = False
     if "beachside_theme" not in st.session_state:
-        st.session_state["beachside_theme"] = False
+        st.session_state["beachside_theme"] = True
     # Smart rerun control
     if "last_rerun" not in st.session_state:
         st.session_state["last_rerun"] = 0
@@ -86,6 +86,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Set custom page name for sidebar navigation
+if hasattr(st, '_main_script_path'):
+    st._main_script_path = "AI Assistant"
 
 # what is this line for?
 os.environ["USER_AGENT"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
@@ -757,7 +761,7 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #000000;
             }
             .stTextInput > div > div > input {
-                border: 2px solid #0b556e;
+                border: 2px solid #0b556e; 
                 background-color: #d4f4f0 !important;
                 color: #000000 !important;
                 caret-color: #000000 !important;

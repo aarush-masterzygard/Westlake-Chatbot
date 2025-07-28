@@ -217,16 +217,16 @@ def get_theme_css(dark_mode, beachside_theme):
                 background-color: #FFFFFF !important;
             }
             .main-header {
-                background: linear-gradient(90deg, #89e6cb 0%, #0b556e 100%);
+                background: linear-gradient(90deg, #5dd4b8 0%, #0b556e 100%);
             }
             .chat-container {
                 background: #FFFFFF;
             }
             .user-message {
-                background: linear-gradient(135deg, #89e6cb 0%, #0b556e 100%);
+                background: linear-gradient(135deg, #5dd4b8 0%, #0b556e 100%);
             }
             .ai-message {
-                background: linear-gradient(135deg, #a8f0d9 0%, #1a6b7a 100%);
+                background: linear-gradient(135deg, #4db89e 0%, #1a6b7a 100%);
             }
             .timestamp {
                 color: #0b556e;
@@ -243,7 +243,7 @@ def get_theme_css(dark_mode, beachside_theme):
             }
             /* Original light mode sidebar styling */
             .stSidebar > div {
-                background: linear-gradient(180deg, #89e6cb 0%, #0b556e 100%) !important;
+                background: linear-gradient(180deg, #5dd4b8 0%, #0b556e 100%) !important;
             }
             .stSidebar .stMarkdown {
                 color: #FFFFFF !important;
@@ -285,7 +285,7 @@ def get_theme_css(dark_mode, beachside_theme):
             }
             /* Light mode button styling */
             .stButton > button {
-                background: linear-gradient(90deg, #89e6cb 0%, #0b556e 100%) !important;
+                background: linear-gradient(90deg, #5dd4b8 0%, #0b556e 100%) !important;
                 color: #FFFFFF !important;
                 border: none !important;
             }

@@ -406,17 +406,17 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #E8F4F8;
             }
             .main-header {
-                background: linear-gradient(90deg, #1E3A5F 0%, #2C5F7F 100%);
+                background: #2C5F7F;
             }
             .chat-container {
                 background: #1A2F3F;
                 color: #E8F4F8;
             }
             .user-message {
-                background: linear-gradient(135deg, #2C5F7F 0%, #1E3A5F 100%);
+                background: #2C5F7F;
             }
             .ai-message {
-                background: linear-gradient(135deg, #3F7F9F 0%, #5F9FBF 100%);
+                background: #3F7F9F;
             }
             .timestamp {
                 color: #B0D4E8;
@@ -446,13 +446,13 @@ def get_theme_css(dark_mode, beachside_theme):
             
             /* Beachside dark mode sidebar styling */
             .sidebar-info {
-                background: linear-gradient(135deg, #2C5F7F 0%, #1E3A5F 100%) !important;
+                background: #2C5F7F !important;
                 color: #E8F4F8 !important;
             }
             
             /* Beachside dark mode button styling */
             .stButton > button {
-                background: linear-gradient(90deg, #2C5F7F 0%, #1E3A5F 100%) !important;
+                background: #2C5F7F !important;
                 color: #FFFFFF !important;
                 border: none !important;
             }
@@ -464,7 +464,7 @@ def get_theme_css(dark_mode, beachside_theme):
             
             /* Beachside dark mode sidebar background */
             .stSidebar > div {
-                background: linear-gradient(180deg, #1E3A5F 0%, #2C5F7F 100%) !important;
+                background: #1E3A5F !important;
             }
             
             /* Beachside dark mode sidebar text */

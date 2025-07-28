@@ -1,20 +1,36 @@
 # 🌊 Beachside High School AI Chatbot
 
-An intelligent chatbot built with Streamlit and LangChain that provides information about Beachside High School using RAG (Retrieval-Augmented Generation) technology.
+An intelligent chatbot built with Streamlit and LangChain that provides comprehensive information about Beachside High School using RAG (Retrieval-Augmented Generation) technology.
 
 ## 🚀 Features
 
-- **Smart Content Search**: Uses FAISS vector database for semantic search
-- **Conversational AI**: Maintains chat history and context
-- **Real-time Responses**: Streaming responses for better user experience
-- **Dark/Light Mode**: Toggle between themes
-- **Comprehensive Coverage**: Scrapes and indexes school website content
+- **Smart Content Search**: Uses FAISS vector database for semantic search across web pages and PDFs
+- **Conversational AI**: Maintains chat history and context for natural conversations
+- **Real-time Responses**: Streaming responses with typing indicators for better user experience
+- **Multi-Source Content**: Processes both website content and PDF documents automatically
+- **Theme Support**: Toggle between dark/light modes with custom Beachside themes
+- **Comprehensive Coverage**: Scrapes and indexes 110+ school website pages plus PDF documents
+- **Error Recovery**: Robust error handling with automatic retries and graceful fallbacks
+- **Mobile Responsive**: Optimized for all device sizes
 
-## 📋 Website Coverage
+## 📋 Content Coverage
 
-The chatbot scrapes and indexes content from **109 pages** of the Beachside High School website:
+The chatbot scrapes and indexes content from **110+ pages** of the Beachside High School website plus **PDF documents** including:
+
+### 📄 PDF Documents
+
+- Scholarship applications and information
+- Course catalogs and academic guides
+- Athletic forms and schedules
+- Student handbooks and policies
+- Dual enrollment materials
+- Testing information and schedules
+- _And many more educational resources_
+
+### 🌐 Website Pages
 
 ### 🏠 Main Pages (Depth 0-1)
+
 1. **Homepage** - https://www-bhs.stjohns.k12.fl.us/
 2. **Calendar** - https://www-bhs.stjohns.k12.fl.us/calendar/
 3. **Payments** - https://www-bhs.stjohns.k12.fl.us/payments/
@@ -43,6 +59,7 @@ The chatbot scrapes and indexes content from **109 pages** of the Beachside High
 26. **School Accreditation** - https://www-bhs.stjohns.k12.fl.us/accreditation
 
 ### 🏃‍♂️ Athletics Pages (Depth 2)
+
 27. **Cross Country** - https://www-bhs.stjohns.k12.fl.us/athletics/cross-country/
 28. **Girls Golf** - https://www-bhs.stjohns.k12.fl.us/athletics/girls-golf/
 29. **Boys Golf** - https://www-bhs.stjohns.k12.fl.us/athletics/boys-golf/
@@ -73,12 +90,14 @@ The chatbot scrapes and indexes content from **109 pages** of the Beachside High
 54. **Letter Jacket Ordering** - https://www-bhs.stjohns.k12.fl.us/athletics/ordering/
 
 ### 🎭 Performing Arts Pages (Depth 2)
+
 55. **Band** - https://www-bhs.stjohns.k12.fl.us/performing-arts/band/
 56. **Beachside Honors Chorus** - https://www-bhs.stjohns.k12.fl.us/performing-arts/chorus/
 57. **Dance** - https://www-bhs.stjohns.k12.fl.us/performing-arts/dance/
 58. **Theatre** - https://www-bhs.stjohns.k12.fl.us/performing-arts/theatre/
 
 ### 🎓 Academic & Counseling Pages (Depth 2)
+
 59. **Mu Alpha Theta** - https://www-bhs.stjohns.k12.fl.us/mu-alpha-theta/
 60. **2025-26 Course Selection** - https://www-bhs.stjohns.k12.fl.us/guidance/course-selections/
 61. **Career Planning** - https://www-bhs.stjohns.k12.fl.us/guidance/career-planning/
@@ -99,6 +118,7 @@ The chatbot scrapes and indexes content from **109 pages** of the Beachside High
 76. **Dual Enrollment at SJRSC** - https://www-bhs.stjohns.k12.fl.us/guidance/dual-enrollment-sjrsc/
 
 ### 💰 Scholarship Pages (Depth 2-3)
+
 77. **Scholarship Tips and Information** - https://www-bhs.stjohns.k12.fl.us/guidance/scholarships/
 78. **August Scholarships** - https://www-bhs.stjohns.k12.fl.us/guidance/scholarships/august-scholarships/
 79. **September Scholarships** - https://www-bhs.stjohns.k12.fl.us/guidance/scholarships/september-scholarships/
@@ -113,6 +133,7 @@ The chatbot scrapes and indexes content from **109 pages** of the Beachside High
 88. **Summer Scholarships** - https://www-bhs.stjohns.k12.fl.us/guidance/scholarships/june-july-scholarships/
 
 ### 📝 Testing Pages (Depth 2-3)
+
 89. **Beachside Testing Calendar** - https://www-bhs.stjohns.k12.fl.us/testing/beachside-testing-calendar/
 90. **SJCSD Assessment Calendar** - https://www-bhs.stjohns.k12.fl.us/testing/home/beachside-testing-calendar/
 91. **FAST & EOCs (State Exams)** - https://www-bhs.stjohns.k12.fl.us/testing/fast-eocs-state-exams/
@@ -123,75 +144,88 @@ The chatbot scrapes and indexes content from **109 pages** of the Beachside High
 96. **AP Testing Information** - https://www-bhs.stjohns.k12.fl.us/testing/ap-testing-information/
 
 ### 🔧 System Pages (Depth 2)
+
 97. **Events Feed** - https://www-bhs.stjohns.k12.fl.us/feed/eo-events/
 98. **Email Protection** - https://www-bhs.stjohns.k12.fl.us/cdn-cgi/l/email-protection
 99. **WordPress Login** - https://www-bhs.stjohns.k12.fl.us/wp-login.php
 
 ## 📊 Technical Specifications
 
-- **Total Pages Indexed**: 109 pages
-- **Embedding Model**: OpenAI text-embedding-3-small
-- **Vector Database**: FAISS
-- **Chunk Size**: 800 characters with 200 character overlap
-- **Estimated Tokens**: ~408,750 tokens
-- **Estimated Cost**: ~$0.008 for full indexing
+- **Total Web Pages Indexed**: 110+ pages
+- **PDF Documents**: 50+ documents processed automatically
+- **Embedding Model**: OpenAI text-embedding-3-small (1,536 dimensions)
+- **Vector Database**: FAISS with optimized indexing
+- **Web Content Chunks**: 600 characters with 100 character overlap
+- **PDF Content Chunks**: 1,000 characters with 150 character overlap
+- **Safety Limits**: 15MB per PDF, 100MB total PDF content, 100 pages per PDF
+- **Processing Features**: Automatic retry logic, timeout handling, server-friendly delays
 
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
+
 - Python 3.8+
 - OpenAI API Key
 
 ### Installation Steps
 
 1. **Clone the repository**
+
    ```bash
    git clone <your-repo-url>
    cd BeachsideChatbot
    ```
 
 2. **Install dependencies**
+
    ```bash
    pip install -r requirements.txt
    ```
 
 3. **Set up API Key**
-   
+
    For local development, create `Environment/API-Key.env`:
+
    ```
    OPENAI_API_KEY=your-openai-api-key-here
    ```
-   
+
    For deployment, add to `Source/.streamlit/secrets.toml`:
+
    ```toml
    OPENAI_API_KEY = "your-openai-api-key-here"
    ```
 
 4. **Create Vector Database**
+
    ```bash
-   python Source/6_LoadWebsiteData.py
+   python Source/1_LoadWebsiteData.py
    ```
 
 5. **Run the Application**
+
    ```bash
    python deploy.py
    ```
-   
+
    Or directly:
+
    ```bash
-   streamlit run Source/7_Chatbot.py
+   streamlit run Source/2_AI_Assistant.py
    ```
 
 ## 🚀 Deployment
 
 ### Streamlit Cloud
+
 1. Push code to GitHub (API keys are excluded via .gitignore)
 2. Go to [share.streamlit.io](https://share.streamlit.io)
 3. Connect your GitHub repository
-4. Set main file path: `Source/7_Chatbot.py`
+4. Set main file path: `Source/2_AI_Assistant.py`
 5. Add your OpenAI API key in Streamlit Cloud secrets
 
 ### Local Development
+
 Use the included `deploy.py` script which checks all requirements and starts the app.
 
 ## 📁 Project Structure
@@ -199,37 +233,53 @@ Use the included `deploy.py` script which checks all requirements and starts the
 ```
 BeachsideChatbot/
 ├── Source/
-│   ├── 6_LoadWebsiteData.py    # Website scraper and vector DB creator
-│   ├── 7_Chatbot.py            # Main Streamlit application
-│   └── .streamlit/
-│       └── secrets.toml        # Streamlit secrets (not in git)
-├── pages/
-│   └── Chat_History.py         # Chat history page
+│   ├── 1_LoadWebsiteData.py    # Enhanced website + PDF scraper and vector DB creator
+│   ├── 2_AI_Assistant.py       # Main Streamlit application with improved UI
+│   ├── pages/
+│   │   └── Chat_History.py     # Chat history page
+│   ├── .streamlit/
+│   │   └── secrets.toml        # Streamlit secrets (not in git)
+│   └── index.faiss/            # Vector database files (web + PDF content)
+│       ├── index.faiss         # FAISS vector index
+│       └── index.pkl           # Document metadata
 ├── Environment/
 │   └── API-Key.env            # Local environment variables (not in git)
-├── index.faiss/               # Vector database files
 ├── requirements.txt           # Python dependencies
-├── deploy.py                  # Deployment checker script
-└── README.md                  # This file
+├── deploy.py                  # Deployment checker and launcher script
+├── count_links.py             # Utility script for link analysis
+├── test_api_key.py           # API key testing utility
+├── .gitignore                # Git ignore rules (excludes secrets and temp files)
+└── README.md                 # This file
 ```
 
 ## 🔧 Configuration
 
-### Webscraper Settings
-In `Source/6_LoadWebsiteData.py`, you can adjust:
-- `max_pages`: Number of pages to scrape (default: 5, max discovered: 109)
-- `chunk_size`: Text chunk size for embeddings (default: 800)
-- `chunk_overlap`: Overlap between chunks (default: 200)
+### Content Scraper Settings
 
-### Chatbot Settings
-In `Source/7_Chatbot.py`:
+In `Source/1_LoadWebsiteData.py`, you can adjust:
+
+- `max_pages`: Number of web pages to scrape (default: 110)
+- `max_pdfs`: Number of PDF documents to process (default: 50)
+- `PDF_SIZE_LIMIT`: Maximum PDF file size (default: 15MB)
+- `MAX_PAGES_PER_PDF`: Maximum pages per PDF (default: 100)
+- Web chunk size: 600 characters with 100 character overlap
+- PDF chunk size: 1,000 characters with 150 character overlap
+- Request delays: 2s between web pages, 5s between PDFs
+
+### AI Assistant Settings
+
+In `Source/2_AI_Assistant.py`:
+
 - OpenAI model: `gpt-3.5-turbo-0125`
 - Embedding model: `text-embedding-3-small`
 - Search results: 4 most relevant chunks
+- Streaming responses with HTML escaping for security
+- Multiple theme options with dark/light mode support
 
 ## 🤖 Usage Examples
 
 Ask the chatbot questions like:
+
 - "What are the graduation requirements?"
 - "Tell me about the AICE program"
 - "What sports does Beachside offer?"
@@ -245,12 +295,15 @@ Ask the chatbot questions like:
 
 ## 📈 Performance Features
 
-- Cached vector database loading
-- Lazy component initialization
-- Session state optimization
-- Connection pooling
-- Streaming responses
-- Smart rerun control
+- **Cached Components**: Vector database, LLM, and retriever caching with `@st.cache_resource`
+- **Lazy Loading**: Heavy components loaded only when needed
+- **Session State Optimization**: Efficient memory management with automatic cleanup
+- **Connection Pooling**: Reused HTTP connections for better performance
+- **Streaming Responses**: Real-time response generation with typing indicators
+- **Smart Rerun Control**: Prevents unnecessary UI refreshes
+- **Batch Processing**: PDF processing in optimized batches
+- **Error Recovery**: Automatic retries with exponential backoff
+- **HTML Security**: Proper escaping to prevent injection attacks
 
 ## 🎨 Features
 
@@ -277,13 +330,16 @@ This project is for educational purposes. Please respect the school's website te
 ### Common Issues
 
 1. **"No API key found"**
+
    - Check that your API key is properly set in the appropriate file
    - Ensure the API key starts with "sk-"
 
 2. **"Vector database not found"**
-   - Run `python Source/6_LoadWebsiteData.py` to create the database
+
+   - Run `python Source/1_LoadWebsiteData.py` to create the database
 
 3. **Import errors**
+
    - Run `pip install -r requirements.txt`
 
 4. **Streamlit secrets not working**
@@ -293,20 +349,30 @@ This project is for educational purposes. Please respect the school's website te
 ### Getting Help
 
 Run the deployment checker for diagnostics:
+
 ```bash
 python deploy.py
 ```
 
-## 📊 Analytics
+## 📊 Content Analytics
 
 The chatbot can answer questions about:
-- **Academic Programs**: AICE, dual enrollment, course selection
-- **Athletics**: All 20+ sports teams and activities
-- **Student Services**: Counseling, testing, health clinic
-- **Administrative**: Registration, attendance, parking
-- **College Prep**: Scholarships, NCAA, graduation requirements
-- **Extracurricular**: Clubs, performing arts, NHS
+
+- **Academic Programs**: AICE, dual enrollment, course selection, graduation requirements
+- **Athletics**: All 20+ sports teams, tryouts, camps, and schedules
+- **Student Services**: Counseling, testing, health clinic, mental health resources
+- **Administrative**: Registration, attendance, parking, transcripts, facility requests
+- **College Prep**: Scholarships, NCAA eligibility, financial aid, college visits
+- **Extracurricular**: Student clubs, performing arts, NHS, community service
+- **PDF Resources**: Detailed information from scholarship applications, course catalogs, handbooks, and forms
+
+### 🔍 Enhanced Search Capabilities
+
+- **Multi-Source Search**: Searches both web content and PDF documents simultaneously
+- **Semantic Understanding**: Finds relevant information even with different wording
+- **Context Awareness**: Maintains conversation history for follow-up questions
+- **Document Attribution**: Shows whether information comes from web pages or PDF documents
 
 ---
 
-*Built with ❤️ for Beachside High School students, parents, and staff*
+_Built for Beachside High School students, parents, and staff_

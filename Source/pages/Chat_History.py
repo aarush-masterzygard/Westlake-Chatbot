@@ -33,7 +33,7 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #E8F4F8;
             }
             .main-header {
-                background: #2C5F7F;
+                background: linear-gradient(180deg, #3F7F9F 0%, #3F7F9F 5%, #2C5F7F 95%);
             }
             .chat-container {
                 background: #1A2F3F;
@@ -125,45 +125,89 @@ def get_theme_css(dark_mode, beachside_theme):
     else:
         # Original Theme Colors
         if dark_mode:
-            # Original Dark Theme
+            # Original Dark Theme - Deep Purples, Dark Blues, Violets, Dark Reds
             return """
             body {
-                background-color: #1E1E1E;
-                color: #E0E0E0;
+                background-color: #1a0d2e;
+                color: #e8e3f0;
             }
             .main-header {
-                background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%);
+                background: linear-gradient(90deg, #2d1b69 0%, #0f0c29 50%, #24243e 100%);
             }
             .chat-container {
-                background: #2D2D2D;
-                color: #E0E0E0;
+                background: #2a1f3d;
+                color: #e8e3f0;
             }
             .user-message {
-                background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%);
+                background: linear-gradient(135deg, #4a148c 0%, #6a1b9a 50%, #8e24aa 100%);
             }
             .ai-message {
-                background: linear-gradient(135deg, #614385 0%, #516395 100%);
+                background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
             }
             .timestamp {
-                color: #A0A0A0;
+                color: #b39ddb;
             }
             .stats-container {
-                background: #2D2D2D;
-                border: 1px solid #3D3D3D;
-                color: #E0E0E0;
+                background: #2a1f3d;
+                border: 1px solid #4a148c;
+                color: #e8e3f0;
             }
             .no-history-container {
-                background: #2D2D2D;
-                border: 1px solid #3D3D3D;
-                color: #E0E0E0;
+                background: #2a1f3d;
+                border: 1px solid #4a148c;
+                color: #e8e3f0;
             }
             /* Original dark mode sidebar styling */
             .stSidebar > div {
-                background: linear-gradient(180deg, #4B6CB7 0%, #182848 100%) !important;
+                background: linear-gradient(180deg, #2d1b69 0%, #4a148c 50%, #6a1b9a 100%) !important;
+            }
+            /* Dark mode button styling */
+            .stButton > button {
+                background: linear-gradient(90deg, #4a148c 0%, #6a1b9a 50%, #8e24aa 100%) !important;
+                color: #FFFFFF !important;
+                border: none !important;
             }
             """
+            
+            # COMMENTED OUT - Original Dark Theme (for easy restoration)
+            # return """
+            # body {
+            #     background-color: #1E1E1E;
+            #     color: #E0E0E0;
+            # }
+            # .main-header {
+            #     background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%);
+            # }
+            # .chat-container {
+            #     background: #2D2D2D;
+            #     color: #E0E0E0;
+            # }
+            # .user-message {
+            #     background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%);
+            # }
+            # .ai-message {
+            #     background: linear-gradient(135deg, #614385 0%, #516395 100%);
+            # }
+            # .timestamp {
+            #     color: #A0A0A0;
+            # }
+            # .stats-container {
+            #     background: #2D2D2D;
+            #     border: 1px solid #3D3D3D;
+            #     color: #E0E0E0;
+            # }
+            # .no-history-container {
+            #     background: #2D2D2D;
+            #     border: 1px solid #3D3D3D;
+            #     color: #E0E0E0;
+            # }
+            # /* Original dark mode sidebar styling */
+            # .stSidebar > div {
+            #     background: linear-gradient(180deg, #4B6CB7 0%, #182848 100%) !important;
+            # }
+            # """
         else:
-            # Original Light Theme (with white background)
+            # Original Light Theme - Vibrant Orange to Red Gradients
             return """
             body {
                 background-color: #FFFFFF !important;
@@ -173,36 +217,42 @@ def get_theme_css(dark_mode, beachside_theme):
                 background-color: #FFFFFF !important;
             }
             .main-header {
-                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(90deg, #ff9800 0%, #ff5722 50%, #d32f2f 100%);
             }
             .chat-container {
                 background: #FFFFFF;
             }
             .user-message {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #ff9800 0%, #ff5722 50%, #e53935 100%);
             }
             .ai-message {
-                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                background: linear-gradient(135deg, #ffb74d 0%, #ff7043 50%, #f44336 100%);
             }
             .timestamp {
-                color: #888888;
+                color: #555555;
             }
             .stats-container {
                 background: #FFFFFF;
-                border: 1px solid #e9ecef;
+                border: 1px solid #ff5722;
                 color: #000000;
             }
             .no-history-container {
                 background: #FFFFFF;
-                border: 1px solid #e9ecef;
+                border: 1px solid #ff5722;
                 color: #000000;
             }
             /* Original light mode sidebar styling */
             .stSidebar > div {
-                background: linear-gradient(180deg, #667eea 0%, #764ba2 100%) !important;
+                background: linear-gradient(180deg, #ff9800 0%, #ff5722 50%, #d32f2f 100%) !important;
             }
             .stSidebar .stMarkdown {
                 color: #FFFFFF !important;
+            }
+            /* Light mode button styling */
+            .stButton > button {
+                background: linear-gradient(90deg, #ff9800 0%, #ff5722 50%, #e53935 100%) !important;
+                color: #FFFFFF !important;
+                border: none !important;
             }
             """
 

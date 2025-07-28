@@ -406,7 +406,7 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #E8F4F8;
             }
             .main-header {
-                background: #2C5F7F;
+                background: linear-gradient(180deg, #3F7F9F 0%, #3F7F9F 5%, #2C5F7F 95%);
             }
             .chat-container {
                 background: #1A2F3F;
@@ -547,60 +547,60 @@ def get_theme_css(dark_mode, beachside_theme):
     else:
         # Original Theme Colors
         if dark_mode:
-            # Original Dark Theme
+            # Original Dark Theme - Deep Purples, Dark Blues, Violets, Dark Reds
             return """
             body {
-                background-color: #1E1E1E;
-                color: #E0E0E0;
+                background-color: #1a0d2e;
+                color: #e8e3f0;
             }
             .main-header {
-                background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%);
+                background: linear-gradient(90deg, #2d1b69 0%, #0f0c29 50%, #24243e 100%);
             }
             .chat-container {
-                background: #2D2D2D;
-                color: #E0E0E0;
+                background: #2a1f3d;
+                color: #e8e3f0;
             }
             .user-message {
-                background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%);
+                background: linear-gradient(135deg, #4a148c 0%, #6a1b9a 50%, #8e24aa 100%);
             }
             .ai-message {
-                background: linear-gradient(135deg, #614385 0%, #516395 100%);
+                background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
             }
             .timestamp {
-                color: #A0A0A0;
+                color: #b39ddb;
             }
             .welcome-container {
-                background: #2D2D2D;
-                border: 1px solid #3D3D3D;
-                color: #E0E0E0;
+                background: #2a1f3d;
+                border: 1px solid #4a148c;
+                color: #e8e3f0;
             }
             .welcome-container h2 {
-                color: #E0E0E0;
+                color: #e8e3f0;
             }
             .welcome-container p {
-                color: #C0C0C0;
+                color: #d1c4e9;
             }
             .stTextInput > div > div > input {
-                background-color: #4A4A4A !important;
-                color: #FFFFFF !important;
-                border: 2px solid #4B6CB7;
+                background-color: #3d2352 !important;
+                color: #e8e3f0 !important;
+                border: 2px solid #6a1b9a;
             }
             
             .stTextArea > div > div > textarea {
-                background-color: #4A4A4A !important;
-                color: #FFFFFF !important;
-                border: 2px solid #4B6CB7;
+                background-color: #3d2352 !important;
+                color: #e8e3f0 !important;
+                border: 2px solid #6a1b9a;
             }
             
             /* Dark mode sidebar styling */
             .sidebar-info {
-                background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%) !important;
-                color: #E0E0E0 !important;
+                background: linear-gradient(135deg, #4a148c 0%, #6a1b9a 50%, #8e24aa 100%) !important;
+                color: #e8e3f0 !important;
             }
             
             /* Dark mode button styling */
             .stButton > button {
-                background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%) !important;
+                background: linear-gradient(90deg, #4a148c 0%, #6a1b9a 50%, #8e24aa 100%) !important;
                 color: #FFFFFF !important;
                 border: none !important;
             }
@@ -612,16 +612,90 @@ def get_theme_css(dark_mode, beachside_theme):
             
             /* Original dark mode sidebar background */
             .stSidebar > div {
-                background: linear-gradient(180deg, #4B6CB7 0%, #182848 100%) !important;
+                background: linear-gradient(180deg, #2d1b69 0%, #4a148c 50%, #6a1b9a 100%) !important;
             }
             
             /* Dark mode sidebar text */
             .stSidebar .stMarkdown {
-                color: #E0E0E0;
+                color: #e8e3f0;
             }
             """
+            
+            # COMMENTED OUT - Original Dark Theme (for easy restoration)
+            # return """
+            # body {
+            #     background-color: #1E1E1E;
+            #     color: #E0E0E0;
+            # }
+            # .main-header {
+            #     background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%);
+            # }
+            # .chat-container {
+            #     background: #2D2D2D;
+            #     color: #E0E0E0;
+            # }
+            # .user-message {
+            #     background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%);
+            # }
+            # .ai-message {
+            #     background: linear-gradient(135deg, #614385 0%, #516395 100%);
+            # }
+            # .timestamp {
+            #     color: #A0A0A0;
+            # }
+            # .welcome-container {
+            #     background: #2D2D2D;
+            #     border: 1px solid #3D3D3D;
+            #     color: #E0E0E0;
+            # }
+            # .welcome-container h2 {
+            #     color: #E0E0E0;
+            # }
+            # .welcome-container p {
+            #     color: #C0C0C0;
+            # }
+            # .stTextInput > div > div > input {
+            #     background-color: #4A4A4A !important;
+            #     color: #FFFFFF !important;
+            #     border: 2px solid #4B6CB7;
+            # }
+            # 
+            # .stTextArea > div > div > textarea {
+            #     background-color: #4A4A4A !important;
+            #     color: #FFFFFF !important;
+            #     border: 2px solid #4B6CB7;
+            # }
+            # 
+            # /* Dark mode sidebar styling */
+            # .sidebar-info {
+            #     background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%) !important;
+            #     color: #E0E0E0 !important;
+            # }
+            # 
+            # /* Dark mode button styling */
+            # .stButton > button {
+            #     background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%) !important;
+            #     color: #FFFFFF !important;
+            #     border: none !important;
+            # }
+            # 
+            # /* Force button text color */
+            # .stButton > button span {
+            #     color: #FFFFFF !important;
+            # }
+            # 
+            # /* Original dark mode sidebar background */
+            # .stSidebar > div {
+            #     background: linear-gradient(180deg, #4B6CB7 0%, #182848 100%) !important;
+            # }
+            # 
+            # /* Dark mode sidebar text */
+            # .stSidebar .stMarkdown {
+            #     color: #E0E0E0;
+            # }
+            # """
         else:
-            # Original Light Theme (with white background)
+            # Original Light Theme - Vibrant Orange to Red Gradients
             return """
             body {
                 background-color: #FFFFFF !important;
@@ -631,23 +705,23 @@ def get_theme_css(dark_mode, beachside_theme):
                 background-color: #FFFFFF !important;
             }
             .main-header {
-                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(90deg, #ff9800 0%, #ff5722 50%, #d32f2f 100%);
             }
             .chat-container {
                 background: #FFFFFF;
             }
             .user-message {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #ff9800 0%, #ff5722 50%, #e53935 100%);
             }
             .ai-message {
-                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                background: linear-gradient(135deg, #ffb74d 0%, #ff7043 50%, #f44336 100%);
             }
             .timestamp {
-                color: #888888;
+                color: #555555;
             }
             .welcome-container {
                 background: #FFFFFF;
-                border: 1px solid #e9ecef;
+                border: 1px solid #ff5722;
                 color: #000000;
             }
             .welcome-container h2 {
@@ -657,32 +731,32 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #000000;
             }
             .stTextInput > div > div > input {
-                border: 2px solid #667eea;
-                background-color: #4A4A4A !important;
-                color: #FFFFFF !important;
+                border: 2px solid #ff5722;
+                background-color: #fff3e0 !important;
+                color: #000000 !important;
             }
             
             .stTextArea > div > div > textarea {
-                border: 2px solid #667eea;
-                background-color: #4A4A4A !important;
-                color: #FFFFFF !important;
+                border: 2px solid #ff5722;
+                background-color: #fff3e0 !important;
+                color: #000000 !important;
             }
             
             /* Original light mode sidebar styling */
             .stSidebar > div {
-                background: linear-gradient(180deg, #667eea 0%, #764ba2 100%) !important;
+                background: linear-gradient(180deg, #ff9800 0%, #ff5722 50%, #d32f2f 100%) !important;
             }
             .stSidebar .stMarkdown {
                 color: #FFFFFF !important;
             }
             .sidebar-info {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                background: linear-gradient(135deg, #ff9800 0%, #ff5722 50%, #e53935 100%) !important;
                 color: white !important;
             }
             
             /* Light mode button styling */
             .stButton > button {
-                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
+                background: linear-gradient(90deg, #ff9800 0%, #ff5722 50%, #e53935 100%) !important;
                 color: #FFFFFF !important;
                 border: none !important;
             }

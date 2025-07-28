@@ -84,7 +84,7 @@ st.set_page_config(
     page_title="🌊 Beachside AI Assistant", 
     page_icon="🌊",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # what is this line for?
@@ -483,25 +483,23 @@ def get_theme_css(dark_mode, beachside_theme):
                 background-color: #FFFFFF !important;
             }
             .main-header {
-                background: linear-gradient(90deg, #1FB25C 0%, #13635F 100%);
-                /* Previous green: background: linear-gradient(90deg, #25CF6D 0%, #13635F 100%); */
+                background: linear-gradient(180deg, #0f2b42 0%, #0f2b42 4%, #6aba45 96%);
             }
             .chat-container {
                 background: #FFFFFF;
             }
             .user-message {
-                background: linear-gradient(135deg, #1FB25C 0%, #13635F 100%);
-                /* Previous green: background: linear-gradient(135deg, #25CF6D 0%, #13635F 100%); */
+                background: #6aba45;
             }
             .ai-message {
-                background: linear-gradient(135deg, #13635F 0%, #22B3AB 100%);
+                background: #0f2b42;
             }
             .timestamp {
                 color: #2F4F4F;
             }
             .welcome-container {
                 background: #FFFFFF;
-                border: 1px solid #13635F;
+                border: 1px solid #0f2b42;
                 color: #000000;
             }
             .welcome-container h2 {
@@ -511,37 +509,32 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #000000;
             }
             .stTextInput > div > div > input {
-                border: 2px solid #1FB25C;
-                /* Previous green: border: 2px solid #25CF6D; */
+                border: 2px solid #6aba45;
                 background-color: #4A4A4A !important;
                 color: #FFFFFF !important;
             }
             
             .stTextArea > div > div > textarea {
-                border: 2px solid #1FB25C;
-                /* Previous green: border: 2px solid #25CF6D; */
+                border: 2px solid #6aba45;
                 background-color: #4A4A4A !important;
                 color: #FFFFFF !important;
             }
             
             /* Beachside light mode sidebar styling */
             .stSidebar > div {
-                background: linear-gradient(180deg, #1FB25C 0%, #13635F 100%) !important;
-                /* Previous green: background: linear-gradient(180deg, #25CF6D 0%, #13635F 100%) !important; */
+                background: #0f2b42 !important;
             }
             .stSidebar .stMarkdown {
                 color: #FFFFFF !important;
             }
             .sidebar-info {
-                background: linear-gradient(135deg, #1FB25C 0%, #13635F 100%) !important;
-                /* Previous green: background: linear-gradient(135deg, #25CF6D 0%, #13635F 100%) !important; */
+                background: #0f2b42 !important;
                 color: white !important;
             }
             
             /* Beachside light mode button styling */
             .stButton > button {
-                background: linear-gradient(90deg, #1FB25C 0%, #13635F 100%) !important;
-                /* Previous green: background: linear-gradient(90deg, #25CF6D 0%, #13635F 100%) !important; */
+                background: #6aba45 !important;
                 color: #FFFFFF !important;
                 border: none !important;
             }
@@ -1105,9 +1098,9 @@ def main():
     # Header
     st.markdown("""
     <div class="main-header">
-        <h1 style="margin-bottom: 8px; text-align: center; width: 100%; display: block;">🌊 Beachside AI Assistant</h1>
-        <h2 style="font-size: 1.4rem; margin: 8px 0 8px 0; text-align: center; width: 100%; display: block;">Developed by Aarush Rajkumar</h2>
-        <p style="margin-top: 8px; text-align: center; width: 100%; display: block; line-height: 1.4; max-width: 600px; margin-left: auto; margin-right: auto;">Your intelligent companion for exploring website content</p>
+        <h1 style="margin-bottom: 8px; text-align: center; width: 100%; display: block; color: white;">🌊 Beachside AI Assistant</h1>
+        <h2 style="font-size: 1.4rem; margin: 8px 0 8px 0; text-align: center; width: 100%; display: block; color: white;">Developed by Aarush Rajkumar</h2>
+        <p style="margin-top: 8px; text-align: center; width: 100%; display: block; line-height: 1.4; max-width: 600px; margin-left: auto; margin-right: auto; color: white;">Your intelligent companion for exploring website content</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1181,6 +1174,23 @@ def main():
                 <p>❌ Database not loaded</p>
                 <p>⚠️ Responses may be generic</p>
             </div>
+            """, unsafe_allow_html=True)
+        
+        # Add specific styling for clear chat history button in Beachside theme
+        if st.session_state.get("beachside_theme", False) and not st.session_state.get("dark_mode", True):
+            st.markdown("""
+            <style>
+            /* Clear chat history button - solid green for Beachside light theme */
+            div[data-testid="stSidebar"] .stButton > button {
+                background: #6aba45 !important;
+                border: none !important;
+                color: white !important;
+            }
+            div[data-testid="stSidebar"] .stButton > button:hover {
+                background: #5aa935 !important;
+                transform: translateY(-1px) !important;
+            }
+            </style>
             """, unsafe_allow_html=True)
         
         if st.button("🗑️ Clear Chat History"):

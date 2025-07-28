@@ -5,7 +5,8 @@ import time
 st.set_page_config(
     page_title="📚 Chat History", 
     page_icon="📚",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 def initialize_session_state():
@@ -63,7 +64,7 @@ def get_theme_css(dark_mode, beachside_theme):
             }
             """
         else:
-            # Beachside Light Theme - Forest Green & Dark Teal
+            # Beachside Light Theme - Updated Colors
             return """
             body {
                 background-color: #FFFFFF !important;
@@ -73,39 +74,46 @@ def get_theme_css(dark_mode, beachside_theme):
                 background-color: #FFFFFF !important;
             }
             .main-header {
-                background: linear-gradient(90deg, #1FB25C 0%, #13635F 100%);
-                /* Previous green: background: linear-gradient(90deg, #25CF6D 0%, #13635F 100%); */
+                background: linear-gradient(180deg, #0f2b42 0%, #0f2b42 4%, #6aba45 96%);
             }
             .chat-container {
                 background: #FFFFFF;
             }
             .user-message {
-                background: linear-gradient(135deg, #1FB25C 0%, #13635F 100%);
-                /* Previous green: background: linear-gradient(135deg, #25CF6D 0%, #13635F 100%); */
+                background: #6aba45;
             }
             .ai-message {
-                background: linear-gradient(135deg, #13635F 0%, #22B3AB 100%);
+                background: #0f2b42;
             }
             .timestamp {
                 color: #2F4F4F;
             }
             .stats-container {
                 background: #FFFFFF;
-                border: 1px solid #13635F;
+                border: 1px solid #0f2b42;
                 color: #000000;
             }
             .no-history-container {
                 background: #FFFFFF;
-                border: 1px solid #13635F;
+                border: 1px solid #0f2b42;
                 color: #000000;
             }
             /* Beachside light mode sidebar styling */
             .stSidebar > div {
-                background: linear-gradient(180deg, #1FB25C 0%, #13635F 100%) !important;
-                /* Previous green: background: linear-gradient(180deg, #25CF6D 0%, #13635F 100%) !important; */
+                background: #0f2b42 !important;
             }
             .stSidebar .stMarkdown {
                 color: #FFFFFF !important;
+            }
+            /* All buttons - green in Beachside light mode */
+            .stButton > button {
+                background: #6aba45 !important;
+                color: white !important;
+                border: none !important;
+            }
+            .stButton > button:hover {
+                background: #5aa935 !important;
+                transform: translateY(-1px) !important;
             }
             """
     else:
@@ -377,7 +385,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("### 💬 Conversation History")
+        st.markdown('<h3 style="color: black;">💬 Conversation History</h3>', unsafe_allow_html=True)
         
         # Display messages in reverse order (newest first)
         for i in range(len(st.session_state["chat_history"]) - 1, -1, -2):

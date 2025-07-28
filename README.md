@@ -1,5 +1,7 @@
 # 🌊 Beachside High School AI Chatbot
 
+## Developed by Aarush Rajkumar
+
 An intelligent chatbot built with Streamlit and LangChain that provides comprehensive information about Beachside High School using RAG (Retrieval-Augmented Generation) technology.
 
 ## 🚀 Features

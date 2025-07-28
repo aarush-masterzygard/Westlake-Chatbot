@@ -705,23 +705,23 @@ def get_theme_css(dark_mode, beachside_theme):
                 background-color: #FFFFFF !important;
             }
             .main-header {
-                background: linear-gradient(90deg, #ff9800 0%, #ff5722 50%, #d32f2f 100%);
+                background: linear-gradient(90deg, #89e6cb 0%, #0b556e 100%);
             }
             .chat-container {
                 background: #FFFFFF;
             }
             .user-message {
-                background: linear-gradient(135deg, #ff9800 0%, #ff5722 50%, #e53935 100%);
+                background: linear-gradient(135deg, #89e6cb 0%, #0b556e 100%);
             }
             .ai-message {
-                background: linear-gradient(135deg, #ffb74d 0%, #ff7043 50%, #f44336 100%);
+                background: linear-gradient(135deg, #a8f0d9 0%, #1a6b7a 100%);
             }
             .timestamp {
-                color: #555555;
+                color: #0b556e;
             }
             .welcome-container {
                 background: #FFFFFF;
-                border: 1px solid #ff5722;
+                border: 1px solid #0b556e;
                 color: #000000;
             }
             .welcome-container h2 {
@@ -731,32 +731,80 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #000000;
             }
             .stTextInput > div > div > input {
-                border: 2px solid #ff5722;
-                background-color: #fff3e0 !important;
+                border: 2px solid #0b556e;
+                background-color: #d4f4f0 !important;
                 color: #000000 !important;
+                caret-color: #000000 !important;
             }
             
             .stTextArea > div > div > textarea {
-                border: 2px solid #ff5722;
-                background-color: #fff3e0 !important;
+                border: 2px solid #0b556e;
+                background-color: #d4f4f0 !important;
                 color: #000000 !important;
+                caret-color: #000000 !important;
+            }
+            
+            /* Make placeholder text black for better visibility */
+            .stTextInput > div > div > input::placeholder {
+                color: #000000 !important;
+                opacity: 0.7 !important;
+            }
+            
+            .stTextArea > div > div > textarea::placeholder {
+                color: #000000 !important;
+                opacity: 0.7 !important;
             }
             
             /* Original light mode sidebar styling */
             .stSidebar > div {
-                background: linear-gradient(180deg, #ff9800 0%, #ff5722 50%, #d32f2f 100%) !important;
+                background: linear-gradient(180deg, #89e6cb 0%, #0b556e 100%) !important;
             }
             .stSidebar .stMarkdown {
                 color: #FFFFFF !important;
             }
+            
+            /* Force sidebar navigation text to be white - comprehensive approach */
+            .stSidebar * {
+                color: #FFFFFF !important;
+            }
+            
+            /* Specific targeting for navigation elements */
+            .stSidebar .stTabs button,
+            .stSidebar .stTabs button *,
+            .stSidebar [data-baseweb="tab-list"] button,
+            .stSidebar [data-baseweb="tab-list"] button *,
+            .stSidebar [data-baseweb="tab-list"] [role="tab"],
+            .stSidebar [data-baseweb="tab-list"] [role="tab"] *,
+            .stSidebar nav,
+            .stSidebar nav *,
+            .stSidebar .stSelectbox,
+            .stSidebar .stSelectbox *,
+            .stSidebar .stRadio,
+            .stSidebar .stRadio *,
+            .stSidebar .stCheckbox,
+            .stSidebar .stCheckbox *,
+            .stSidebar .stToggle,
+            .stSidebar .stToggle *,
+            .stSidebar label,
+            .stSidebar label *,
+            .stSidebar p,
+            .stSidebar span,
+            .stSidebar div {
+                color: #FFFFFF !important;
+            }
+            
+            /* Override any specific text color that might be set */
+            .stSidebar [data-testid="stSidebar"] * {
+                color: #FFFFFF !important;
+            }
             .sidebar-info {
-                background: linear-gradient(135deg, #ff9800 0%, #ff5722 50%, #e53935 100%) !important;
+                background: linear-gradient(135deg, #89e6cb 0%, #0b556e 100%) !important;
                 color: white !important;
             }
             
             /* Light mode button styling */
             .stButton > button {
-                background: linear-gradient(90deg, #ff9800 0%, #ff5722 50%, #e53935 100%) !important;
+                background: linear-gradient(90deg, #89e6cb 0%, #0b556e 100%) !important;
                 color: #FFFFFF !important;
                 border: none !important;
             }

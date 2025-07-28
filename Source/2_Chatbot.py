@@ -554,7 +554,7 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #e8e3f0;
             }
             .main-header {
-                background: linear-gradient(90deg, #2d1b69 0%, #0f0c29 50%, #24243e 100%);
+                background: linear-gradient(90deg, #2d1b69 0%, #0f0c29 50%, #2d1b69 100%);
             }
             .chat-container {
                 background: #2a1f3d;
@@ -767,130 +767,7 @@ def get_theme_css(dark_mode, beachside_theme):
             }
             """
 
-    """
-    Generate theme-specific CSS with caching based on dark mode setting.
-    """
-    if dark_mode:
-        return """
-        body {
-            background-color: #1E1E1E;
-            color: #E0E0E0;
-        }
-        .main-header {
-            background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%);
-        }
-        .chat-container {
-            background: #2D2D2D;
-            color: #E0E0E0;
-        }
-        .user-message {
-            background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%);
-        }
-        .ai-message {
-            background: linear-gradient(135deg, #614385 0%, #516395 100%);
-        }
-        .timestamp {
-            color: #A0A0A0;
-        }
-        .welcome-container {
-            background: #2D2D2D;
-            border: 1px solid #3D3D3D;
-            color: #E0E0E0;
-        }
-        .welcome-container h2 {
-            color: #E0E0E0;
-        }
-        .welcome-container p {
-            color: #C0C0C0;
-        }
-        .stTextInput > div > div > input {
-            background-color: #3D3D3D;
-            color: #E0E0E0;
-            border: 2px solid #4B6CB7;
-        }
-        
-        .stTextArea > div > div > textarea {
-            background-color: #3D3D3D;
-            color: #E0E0E0;
-            border: 2px solid #4B6CB7;
-        }
-        
-        /* Dark mode sidebar styling */
-        .sidebar-info {
-            background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%) !important;
-            color: #E0E0E0 !important;
-        }
-        
-        /* Dark mode button styling */
-        .stButton > button {
-            background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%) !important;
-            color: #E0E0E0 !important;
-        }
-        
-        /* Dark mode sidebar background */
-        .stSidebar > div {
-            background-color: #2D2D2D;
-        }
-        
-        /* Dark mode sidebar text */
-        .stSidebar .stMarkdown {
-            color: #E0E0E0;
-        }
-        """
-    else:
-        return """
-        body {
-            background-color: #FFFFFF;
-            color: #333333;
-        }
-        .main-header {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        }
-        .chat-container {
-            background: #f8f9fa;
-        }
-        .user-message {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .ai-message {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        .timestamp {
-            color: #888888;
-        }
-        .welcome-container {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            color: #333333;
-        }
-        .welcome-container h2 {
-            color: #333333;
-        }
-        .welcome-container p {
-            color: #555555;
-        }
-        .stTextInput > div > div > input {
-            border: 2px solid #667eea;
-        }
-        
-        .stTextArea > div > div > textarea {
-            border: 2px solid #667eea;
-        }
-        
-        /* Light mode sidebar styling */
-        .sidebar-info {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-        }
-        
-        /* Light mode button styling */
-        .stButton > button {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-        }
-        
-        /* Light mode sidebar - keep default Streamlit styling */
-        """
+
 
 def smart_rerun():
     """Only rerun when necessary to prevent UI lag"""

@@ -132,7 +132,7 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #e8e3f0;
             }
             .main-header {
-                background: linear-gradient(90deg, #2d1b69 0%, #0f0c29 50%, #24243e 100%);
+                background: linear-gradient(90deg, #2d1b69 0%, #0f0c29 50%, #2d1b69 100%);
             }
             .chat-container {
                 background: #2a1f3d;

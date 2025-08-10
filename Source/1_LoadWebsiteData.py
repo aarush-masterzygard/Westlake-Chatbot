@@ -583,7 +583,7 @@ def load_and_process_website(base_url, max_pages=50, max_pdfs=10):
         print("❌ No chunks created - cannot build vector database!")
 
 if __name__ == "__main__":
-    # URL Variables - Control which website to scrape
+    # URL Variables - Control which website to scrape 
     beachside_url = "https://www-bhs.stjohns.k12.fl.us/"
     test_url = "https://riordan.fandom.com/wiki/Percy_Jackson"
     

@@ -59,7 +59,7 @@ else:
 '''To switch between URLs, just change the last line:
 
 base_url = test_url (for testing)
-base_url = beachside_url (for Beachside High School)
+base_url = westlake_url (for Westlake High School)
 '''
 
 # PDF Processing Configuration
@@ -106,7 +106,7 @@ def find_pdf_links(base_url, all_urls):
                     pdf_links.add(full_pdf_url)
                     print(f"   📄 Found PDF (regex): {full_pdf_url}")
             
-            time.sleep(2.0)  # Be respectful - increased delay between web page scraping
+            time.sleep(2.5)  # Be respectful - increased delay between web page scraping
             
         except Exception as e:
             print(f"   ⚠️ Error scanning {url}: {e}")
@@ -384,7 +384,7 @@ def load_and_process_website(base_url, max_pages=50, max_pdfs=10):
     """
     Load multiple pages from the website and create a comprehensive vector database with PDF support
     """
-    print("🌐 Enhanced Beachside High School Website + PDF Loader")
+    print("🌐 Enhanced Westlake High School Website + PDF Loader")
     print("=" * 60)
     
     # Get all links to scrape
@@ -584,17 +584,17 @@ def load_and_process_website(base_url, max_pages=50, max_pdfs=10):
 
 if __name__ == "__main__":
     # URL Variables - Control which website to scrape
-    beachside_url = "https://www-bhs.stjohns.k12.fl.us/"
+    westlake_url = "https://whs.conejousd.org/"
     test_url = "https://riordan.fandom.com/wiki/Percy_Jackson"
     
     # Choose which URL to use
-    base_url = beachside_url
+    base_url = westlake_url
     
     # 🛡️ SAFETY CONTROLS - Adjust these based on your needs
     # =====================================================
     
     # Number of pages to scrape (MAIN SAFETY CONTROL)
-    max_pages = 120  # Start small and safe - increase gradually if needed
+    max_pages = 150  # Start small and safe - increase gradually if needed
     
     # PDF Processing limits
     max_pdfs = 150  # Number of PDFs to process (reduced for better reliability)

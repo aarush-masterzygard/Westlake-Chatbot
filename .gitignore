@@ -1,4 +1,9 @@
-# Environment variables
+# Westlake High School AI Chatbot - Git Ignore Rules
+# ===================================================
+# This file specifies which files should NOT be committed to version control
+# Protects sensitive information like API keys and excludes development files
+
+# Environment variables (NEVER commit API keys)
 Environment/API-Key.env
 .env
 
@@ -11,6 +16,11 @@ test_api_key.py
 deploy.py
 API_KEY_SETUP.md
 count_links.py
+
+# Westlake website analysis files (development only)
+westlake_page_counter.py
+westlake_count_*.txt
+westlake_analysis_*.txt
 
 # Note: Source/index.faiss/ is NOT ignored - it contains the pre-built vector database needed for deployment
 

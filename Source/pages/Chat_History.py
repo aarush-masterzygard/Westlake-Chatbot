@@ -10,67 +10,70 @@ st.set_page_config(
 )
 
 def initialize_session_state():
-    # Theme preferences - Default to Beachside Light Mode
+    # Theme preferences - Default to Westlake Light Mode
     if "dark_mode" not in st.session_state:
         st.session_state["dark_mode"] = False
-    if "beachside_theme" not in st.session_state:
-        st.session_state["beachside_theme"] = True
+    if "westlake_theme" not in st.session_state:
+        st.session_state["westlake_theme"] = True
     # Chat history for display
     if "chat_history" not in st.session_state:
         st.session_state["chat_history"] = []
 
-def get_theme_css(dark_mode, beachside_theme):
+def get_theme_css(dark_mode, westlake_theme):
     """
-    Generate theme-specific CSS based on dark mode and beachside theme settings.
+    Generate theme-specific CSS based on dark mode and westlake theme settings.
     """
-    if beachside_theme:
-        # Beachside Theme Colors
+    if westlake_theme:
+        # Westlake Theme Colors
         if dark_mode:
-            # Beachside Dark Theme
+            # Westlake Dark Theme
             return """
             body {
-                background-color: #0A1A2A;
-                color: #E8F4F8;
+                background-color: #001F3D;
+                color: #FFFFFF;
             }
             .main-header {
-                background: linear-gradient(180deg, #3F7F9F 0%, #3F7F9F 5%, #2C5F7F 95%);
+                background: #001F3D;
             }
             .chat-container {
-                background: #1A2F3F;
-                color: #E8F4F8;
+                background: #001F3D;
+                color: #FFFFFF;
             }
             .user-message {
-                background: #2C5F7F;
+                background: #FF8C42;
+                color: #FFFFFF;
             }
             .ai-message {
-                background: #3F7F9F;
+                background: #001F3D;
+                color: #FFFFFF;
+                border: 1px solid #FF8C42;
             }
             .timestamp {
-                color: #B0D4E8;
+                color: #FFFFFF;
             }
             .stats-container {
-                background: #1A2F3F;
-                border: 1px solid #2C5F7F;
-                color: #E8F4F8;
+                background: #001F3D;
+                border: 1px solid #FF8C42;
+                color: #FFFFFF;
             }
             .no-history-container {
-                background: #1A2F3F;
-                border: 1px solid #2C5F7F;
-                color: #E8F4F8;
+                background: #001F3D;
+                border: 1px solid #FF8C42;
+                color: #FFFFFF;
             }
-            /* Beachside dark mode sidebar styling */
+            /* Westlake dark mode sidebar styling */
             .stSidebar > div {
-                background: #1E3A5F !important;
+                background: #001F3D !important;
             }
-            /* Beachside dark mode button styling */
+            /* Westlake dark mode button styling */
             .stButton > button {
-                background: #2C5F7F !important;
+                background: #FF8C42 !important;
                 color: #FFFFFF !important;
                 border: none !important;
             }
             """
         else:
-            # Beachside Light Theme - Updated Colors
+            # Westlake Light Theme - Blue & Orange
             return """
             body {
                 background-color: #FFFFFF !important;
@@ -80,45 +83,47 @@ def get_theme_css(dark_mode, beachside_theme):
                 background-color: #FFFFFF !important;
             }
             .main-header {
-                background: linear-gradient(180deg, #0f2b42 0%, #0f2b42 4%, #6aba45 96%);
+                background: #003D73;
             }
             .chat-container {
                 background: #FFFFFF;
             }
             .user-message {
-                background: #6aba45;
+                background: #FF6A13;
+                color: #FFFFFF;
             }
             .ai-message {
-                background: #0f2b42;
+                background: #003D73;
+                color: #FFFFFF;
             }
             .timestamp {
-                color: #2F4F4F;
+                color: #003D73;
             }
             .stats-container {
                 background: #FFFFFF;
-                border: 1px solid #0f2b42;
+                border: 1px solid #003D73;
                 color: #000000;
             }
             .no-history-container {
                 background: #FFFFFF;
-                border: 1px solid #0f2b42;
+                border: 1px solid #003D73;
                 color: #000000;
             }
-            /* Beachside light mode sidebar styling */
+            /* Westlake light mode sidebar styling */
             .stSidebar > div {
-                background: #0f2b42 !important;
+                background: #003D73 !important;
             }
             .stSidebar .stMarkdown {
                 color: #FFFFFF !important;
             }
-            /* All buttons - green in Beachside light mode */
+            /* All buttons - orange in Westlake light mode */
             .stButton > button {
-                background: #6aba45 !important;
+                background: #FF6A13 !important;
                 color: white !important;
                 border: none !important;
             }
             .stButton > button:hover {
-                background: #5aa935 !important;
+                background: #E55A0F !important;
                 transform: translateY(-1px) !important;
             }
             """
@@ -132,7 +137,8 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #e8e3f0;
             }
             .main-header {
-                background: linear-gradient(90deg, #2d1b69 0%, #0f0c29 50%, #2d1b69 100%);
+                /* ORIGINAL GRADIENT (commented for easy restoration): linear-gradient(90deg, #2d1b69 0%, #0f0c29 50%, #2d1b69 100%); */
+                background: #0f0c29;
             }
             .chat-container {
                 background: #2a1f3d;
@@ -293,7 +299,7 @@ def get_theme_css(dark_mode, beachside_theme):
 
 def add_custom_css():
     # Get theme CSS based on current mode
-    theme_css = get_theme_css(st.session_state["dark_mode"], st.session_state["beachside_theme"])
+    theme_css = get_theme_css(st.session_state["dark_mode"], st.session_state["westlake_theme"])
     
     st.markdown(f"""
     <style>
@@ -417,16 +423,16 @@ def main():
                 st.session_state["dark_mode"] = dark_mode
                 st.rerun()  # Immediately refresh to apply theme changes
         
-        # Beachside Theme Toggle
+        # Westlake Theme Toggle
         col3, col4 = st.columns([1.2, 1.8])
         with col3:
             st.markdown("**Style:**")
         with col4:
-            # Beachside theme toggle
-            beachside_theme = st.toggle("Beachside Theme", value=st.session_state["beachside_theme"], key="beachside_theme_toggle")
+            # Westlake theme toggle
+            westlake_theme = st.toggle("Westlake Theme", value=st.session_state["westlake_theme"], key="westlake_theme_toggle")
             # Update session state if toggle changed
-            if beachside_theme != st.session_state["beachside_theme"]:
-                st.session_state["beachside_theme"] = beachside_theme
+            if westlake_theme != st.session_state["westlake_theme"]:
+                st.session_state["westlake_theme"] = westlake_theme
                 st.rerun()  # Immediately refresh to apply theme changes
         
         st.markdown("""

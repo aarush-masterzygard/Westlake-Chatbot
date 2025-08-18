@@ -16,6 +16,128 @@ import streamlit as st
 import os
 import time
 import html
+import re
+import random
+
+# 📚 ABBREVIATION DICTIONARY FOR QUERY EXPANSION
+ABBREVIATIONS = {
+    # General High School Abbreviations
+    "PE": "Physical Education",
+    "AP": "Advanced Placement",
+    "IB": "International Baccalaureate",
+    "GPA": "Grade Point Average",
+    "SAT": "Scholastic Assessment Test",
+    "ACT": "American College Testing",
+    "NHS": "National Honor Society",
+    "FFA": "Future Farmers of America",
+    "STEM": "Science, Technology, Engineering, and Mathematics",
+    "ESL": "English as a Second Language",
+    "IEP": "Individualized Education Program",
+    "TA": "Teaching Assistant",
+    "CP": "College Prep",
+    "DE": "Dual Enrollment",
+    "GT": "Gifted and Talented",
+    "IBDP": "International Baccalaureate Diploma Program",
+    "PSAT": "Preliminary SAT",
+    
+    # Westlake High School / Conejo USD Specific
+    "SAGE": "Students Achieving Greater Excellence",
+    "CTE": "Career and Technical Education",
+    "ASB": "Associated Student Body",
+    "AVID": "Advancement Via Individual Determination",
+    "RSP": "Resource Specialist Program",
+    "ELAC": "English Learner Advisory Committee",
+    "CVUSD": "Conejo Valley Unified School District",
+    "WHS": "Westlake High School",
+    
+    # Clubs / Sports / Extracurriculars
+    "FBLA": "Future Business Leaders of America",
+    "DECA": "Distributive Education Clubs of America",
+    "MUN": "Model United Nations",
+    "NJHS": "National Junior Honor Society",
+    "JV": "Junior Varsity",
+    "VARSITY": "Varsity Team",
+    "ORCHESTRA": "Orchestra Program",
+    "BAND": "Band Program",
+    "CHOIR": "Choir Program",
+    "DRAMA": "Drama Club",
+    "ROBOTICS": "Robotics Club",
+    "SCIENCE_OLYMPIAD": "Science Olympiad",
+    "STUDENT_COUNCIL": "Student Council",
+    "YEARBOOK": "Yearbook Club",
+    "ART_CLUB": "Art Club",
+    
+    # Common IT/Technology Terms
+    "IT": "Information Technology",
+    "CS": "Computer Science",
+    "AI": "Artificial Intelligence",
+    "VR": "Virtual Reality",
+    "AR": "Augmented Reality"
+}
+
+def expand_abbreviations(query):
+    """
+    Expand abbreviations in the user query to improve semantic search.
+    Returns both original and expanded query for better matching.
+    """
+    expanded_query = query
+    found_abbreviations = []
+    
+    # Find abbreviations in the query (case-insensitive)
+    for abbrev, full_form in ABBREVIATIONS.items():
+        # Use word boundaries to match whole words only
+        pattern = r'\b' + re.escape(abbrev) + r'\b'
+        if re.search(pattern, query, re.IGNORECASE):
+            # Replace the abbreviation with both forms for better matching
+            expanded_query = re.sub(pattern, f"{abbrev} {full_form}", expanded_query, flags=re.IGNORECASE)
+            found_abbreviations.append((abbrev, full_form))
+    
+    return expanded_query, found_abbreviations
+
+def get_clarification_message(unknown_terms):
+    """
+    Generate a natural clarification message for unknown terms.
+    """
+    if not unknown_terms:
+        return None
+    
+    # Different message templates for variety
+    templates = [
+        "Sorry, I don't recognize '{term}'. Can you clarify what it means?",
+        "I'm not sure what '{term}' refers to. Could you explain it?",
+        "I haven't seen '{term}' before. What does it mean?",
+        "Could you help me understand what '{term}' stands for?",
+        "I'm not familiar with '{term}'. Can you provide more details?"
+    ]
+    
+    if len(unknown_terms) == 1:
+        template = random.choice(templates)
+        return template.format(term=unknown_terms[0])
+    else:
+        terms_str = "', '".join(unknown_terms[:-1]) + f"', and '{unknown_terms[-1]}"
+        return f"I'm not familiar with some terms: '{terms_str}'. Could you clarify what they mean?"
+
+def detect_unknown_abbreviations(query):
+    """
+    Detect potential abbreviations that aren't in our dictionary.
+    Returns list of unknown uppercase terms that might be abbreviations.
+    """
+    # Find uppercase words that might be abbreviations
+    potential_abbrevs = re.findall(r'\b[A-Z]{2,}\b', query)
+    
+    # Filter out known abbreviations
+    unknown_abbrevs = [abbrev for abbrev in potential_abbrevs 
+                      if abbrev.upper() not in [k.upper() for k in ABBREVIATIONS.keys()]]
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_unknown = []
+    for abbrev in unknown_abbrevs:
+        if abbrev.upper() not in seen:
+            seen.add(abbrev.upper())
+            unique_unknown.append(abbrev)
+    
+    return unique_unknown
 
 # ⚡ PERFORMANCE OPTIMIZATIONS:
 # 1. @st.cache_resource for vector database loading (expensive I/O operation)
@@ -50,11 +172,11 @@ def initialize_session_state():
     # Generate a unique session ID
     if "user_id" not in st.session_state:
         st.session_state["user_id"] = str(time.time())
-    # Theme preferences - Default to Beachside Light Mode
+    # Theme preferences - Default to Westlake Light Mode
     if "dark_mode" not in st.session_state:
         st.session_state["dark_mode"] = False
-    if "beachside_theme" not in st.session_state:
-        st.session_state["beachside_theme"] = True
+    if "westlake_theme" not in st.session_state:
+        st.session_state["westlake_theme"] = True
     # Smart rerun control
     if "last_rerun" not in st.session_state:
         st.session_state["last_rerun"] = 0
@@ -82,8 +204,8 @@ def initialize_session_state():
         st.session_state["form_submitted"] = False
     
 st.set_page_config(
-    page_title="🌊 Beachside AI Assistant", 
-    page_icon="🌊",
+    page_title="🏔️ Westlake AI Assistant", 
+    page_icon="🏔️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -191,7 +313,7 @@ def load_vector_database():
         
         # Test a simple search to verify functionality
         if vector_count > 0:
-            test_results = db.similarity_search("Beachside High School", k=1)
+            test_results = db.similarity_search("Westlake High School", k=1)
             print(f"🔍 Test search returned {len(test_results)} results")
             if test_results:
                 print(f"📄 Sample result length: {len(test_results[0].page_content)} characters")
@@ -237,7 +359,7 @@ def get_retriever(_db):
     Create retriever from the vector database with caching.
     The underscore prefix in _db tells Streamlit not to hash this parameter.
     """
-    return _db.as_retriever(search_type="similarity", search_kwargs={"k": 4})
+    return _db.as_retriever(search_type="similarity", search_kwargs={"k": 6})
 
 @st.cache_resource
 def get_lazy_components():
@@ -303,11 +425,17 @@ def create_rag_chain(_llm, _retriever, _prompt):
     
     # QA system prompt
     qa_system_prompt = """You are an AI assistant designed to answer questions 
-    using information retrieved from the Beachside High School website and PDF documents. 
+    using information retrieved from the Westlake High School website and PDF documents. 
     Your goal is to provide clear, helpful, and accurate answers based 
     only on the provided context. If the context does not contain the answer, 
     respond politely by saying: 'This chatbot is still in its development phase 
     and may not have information on that topic yet.' 
+    
+    ABBREVIATION HANDLING:
+    - Common abbreviations like IT (Information Technology), AP (Advanced Placement), 
+      NHS (National Honor Society), JV (Junior Varsity), etc. should be understood automatically
+    - When you encounter abbreviations, consider both the abbreviated and full forms
+    - If you're unsure about an abbreviation, ask for clarification naturally
     
     When referencing information from PDF documents, mention the source like: 
     "According to the [filename] document..." or "As stated in the [filename] PDF..."
@@ -349,19 +477,41 @@ def get_connection_pool():
     """Reuse HTTP connections for better performance"""
     import requests
     session = requests.Session()
-    session.headers.update({'User-Agent': 'Beachside-Chatbot/1.0'})
+    session.headers.update({'User-Agent': 'Westlake-Chatbot/1.0'})
     return session
 
 def robust_ai_call(user_input, max_retries=3):
-    """Retry failed API calls for better reliability"""
+    """Enhanced AI call with abbreviation expansion and unknown term detection"""
     components = get_lazy_components()  # Load components when needed
+    
+    # Step 1: Check for unknown abbreviations first
+    unknown_abbrevs = detect_unknown_abbreviations(user_input)
+    if unknown_abbrevs:
+        clarification_msg = get_clarification_message(unknown_abbrevs)
+        return {"answer": clarification_msg}
+    
+    # Step 2: Expand known abbreviations for better semantic search
+    expanded_input, found_abbreviations = expand_abbreviations(user_input)
+    
+    # Use expanded input for better retrieval
+    search_input = expanded_input if found_abbreviations else user_input
     
     for attempt in range(max_retries):
         try:
-            return components['rag_chain'].invoke({
-                "input": user_input, 
+            result = components['rag_chain'].invoke({
+                "input": search_input, 
                 "chat_history": st.session_state["chat_history"]
             })
+            
+            # If we expanded abbreviations, add a note about what we found
+            if found_abbreviations and result.get("answer"):
+                expanded_terms = ", ".join([f"{abbrev} ({full})" for abbrev, full in found_abbreviations])
+                # Only add note if the response seems successful (not the "development phase" message)
+                if "development phase" not in result["answer"].lower():
+                    result["answer"] = f"{result['answer']}\n\n*Note: I interpreted {expanded_terms} in your question.*"
+            
+            return result
+            
         except Exception as e:
             if attempt == max_retries - 1:
                 return {"answer": f"Sorry, I'm having trouble right now. Please try again. (Error: {str(e)[:50]}...)"}
@@ -398,80 +548,83 @@ def stream_response(user_input):
     except Exception as e:
         return f"Sorry, I encountered an error: {str(e)[:100]}..."
 
-def get_theme_css(dark_mode, beachside_theme):
+def get_theme_css(dark_mode, westlake_theme):
     """
-    Generate theme-specific CSS based on dark mode and beachside theme settings.
+    Generate theme-specific CSS based on dark mode and westlake theme settings.
     """
-    if beachside_theme:
-        # Beachside Theme Colors
+    if westlake_theme:
+        # Westlake Theme Colors
         if dark_mode:
-            # Beachside Dark Theme
+            # Westlake Dark Theme - Deep Navy Blue, Muted Orange, Soft Gray
             return """
             body {
-                background-color: #0A1A2A;
-                color: #E8F4F8;
+                background-color: #001F3D;
+                color: #FFFFFF;
             }
             .main-header {
-                background: linear-gradient(180deg, #3F7F9F 0%, #3F7F9F 5%, #2C5F7F 95%);
+                background: #001F3D;
             }
             .chat-container {
-                background: #1A2F3F;
-                color: #E8F4F8;
+                background: #001F3D;
+                color: #FFFFFF;
             }
             .user-message {
-                background: #2C5F7F;
+                background: #FF8C42;
+                color: #FFFFFF;
             }
             .ai-message {
-                background: #3F7F9F;
+                background: #001F3D;
+                color: #FFFFFF;
+                border: 1px solid #FF8C42;
             }
             .timestamp {
-                color: #B0D4E8;
+                color: #FFFFFF;
             }
             .welcome-container {
-                background: #1A2F3F;
-                border: 1px solid #2C5F7F;
-                color: #E8F4F8;
+                background: #001F3D;
+                border: 1px solid #FF8C42;
+                color: #FFFFFF;
             }
             .welcome-container h2 {
-                color: #E8F4F8;
+                color: #FFFFFF;
             }
             .welcome-container p {
-                color: #D0E8F0;
+                color: #FFFFFF;
             }
             .stTextInput > div > div > input {
-                background-color: #1a3a4a !important;
-                color: #E8F4F8 !important;
-                border: 2px solid #3F7F9F;
-                caret-color: #E8F4F8 !important;
+                background-color: #001F3D !important;
+                color: #FFFFFF !important;
+                border: 2px solid #FF8C42;
+                caret-color: #FFFFFF !important;
             }
             
             .stTextArea > div > div > textarea {
-                background-color: #1a3a4a !important;
-                color: #E8F4F8 !important;
-                border: 2px solid #3F7F9F;
-                caret-color: #E8F4F8 !important;
+                background-color: #001F3D !important;
+                color: #FFFFFF !important;
+                border: 2px solid #FF8C42;
+                caret-color: #FFFFFF !important;
             }
             
-            /* Beachside dark mode placeholder text */
+            /* Westlake dark mode placeholder text */
             .stTextInput > div > div > input::placeholder {
-                color: #E8F4F8 !important;
+                color: #FFFFFF !important;
                 opacity: 0.7 !important;
             }
             
             .stTextArea > div > div > textarea::placeholder {
-                color: #E8F4F8 !important;
+                color: #FFFFFF !important;
                 opacity: 0.7 !important;
             }
             
-            /* Beachside dark mode sidebar styling */
+            /* Westlake dark mode sidebar styling */
             .sidebar-info {
-                background: #2C5F7F !important;
-                color: #E8F4F8 !important;
+                background: #FF8C42 !important;
+                color: #FFFFFF !important;
             }
             
-            /* Beachside dark mode button styling */
+            /* Westlake dark mode button styling */
             .stButton > button {
-                background: #2C5F7F !important;
+                background: #FF8C42 !important;
                 color: #FFFFFF !important;
                 border: none !important;
             }
@@ -481,18 +634,18 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #FFFFFF !important;
             }
             
-            /* Beachside dark mode sidebar background */
+            /* Westlake dark mode sidebar background */
             .stSidebar > div {
-                background: #1E3A5F !important;
+                background: #001F3D !important;
             }
             
-            /* Beachside dark mode sidebar text */
+            /* Westlake dark mode sidebar text */
             .stSidebar .stMarkdown {
-                color: #E8F4F8;
+                color: #FFFFFF;
             }
             """
         else:
-            # Beachside Light Theme - Forest Green & Dark Teal
+            # Westlake Light Theme - Blue & Orange
             return """
             body {
                 background-color: #FFFFFF !important;
@@ -502,23 +655,25 @@ def get_theme_css(dark_mode, beachside_theme):
                 background-color: #FFFFFF !important;
             }
             .main-header {
-                background: linear-gradient(180deg, #0f2b42 0%, #0f2b42 4%, #6aba45 96%);
+                background: #003D73;
             }
             .chat-container {
                 background: #FFFFFF;
             }
             .user-message {
-                background: #6aba45;
+                background: #FF6A13;
+                color: #FFFFFF;
             }
             .ai-message {
-                background: #0f2b42;
+                background: #003D73;
+                color: #FFFFFF;
             }
             .timestamp {
-                color: #2F4F4F;
+                color: #003D73;
             }
             .welcome-container {
                 background: #FFFFFF;
-                border: 1px solid #0f2b42;
+                border: 1px solid #003D73;
                 color: #000000;
             }
             .welcome-container h2 {
@@ -528,45 +683,45 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #000000;
             }
             .stTextInput > div > div > input {
-                border: 2px solid #6aba45;
-                background-color: #e8f5e8 !important;
-                color: #0f2b42 !important;
-                caret-color: #0f2b42 !important;
+                border: 2px solid #FF6A13;
+                background-color: #FFF4F0 !important;
+                color: #003D73 !important;
+                caret-color: #003D73 !important;
             }
             
             .stTextArea > div > div > textarea {
-                border: 2px solid #6aba45;
-                background-color: #e8f5e8 !important;
-                color: #0f2b42 !important;
-                caret-color: #0f2b42 !important;
+                border: 2px solid #FF6A13;
+                background-color: #FFF4F0 !important;
+                color: #003D73 !important;
+                caret-color: #003D73 !important;
             }
             
-            /* Beachside light mode placeholder text */
+            /* Westlake light mode placeholder text */
             .stTextInput > div > div > input::placeholder {
-                color: #0f2b42 !important;
+                color: #003D73 !important;
                 opacity: 0.7 !important;
             }
             
             .stTextArea > div > div > textarea::placeholder {
-                color: #0f2b42 !important;
+                color: #003D73 !important;
                 opacity: 0.7 !important;
             }
             
-            /* Beachside light mode sidebar styling */
+            /* Westlake light mode sidebar styling */
             .stSidebar > div {
-                background: #0f2b42 !important;
+                background: #003D73 !important;
             }
             .stSidebar .stMarkdown {
                 color: #FFFFFF !important;
             }
             .sidebar-info {
-                background: #0f2b42 !important;
+                background: #003D73 !important;
                 color: white !important;
             }
             
-            /* Beachside light mode button styling */
+            /* Westlake light mode button styling */
             .stButton > button {
-                background: #6aba45 !important;
+                background: #FF6A13 !important;
                 color: #FFFFFF !important;
                 border: none !important;
             }
@@ -586,7 +741,8 @@ def get_theme_css(dark_mode, beachside_theme):
                 color: #e8e3f0;
             }
             .main-header {
-                background: linear-gradient(90deg, #2d1b69 0%, #0f0c29 50%, #2d1b69 100%);
+                /* ORIGINAL GRADIENT (commented for easy restoration): linear-gradient(90deg, #2d1b69 0%, #0f0c29 50%, #2d1b69 100%); */
+                background: #0f0c29;
             }
             .chat-container {
                 background: #2a1f3d;
@@ -855,7 +1011,7 @@ def add_custom_css():
     Add custom CSS with proper theme switching for all elements.
     """
     # Get theme CSS based on current mode (no caching to allow theme switching)
-    theme_css = get_theme_css(st.session_state["dark_mode"], st.session_state["beachside_theme"])
+    theme_css = get_theme_css(st.session_state["dark_mode"], st.session_state["westlake_theme"])
     
     st.markdown(f"""
     <style>
@@ -1066,7 +1222,7 @@ def main():
     # Header
     st.markdown("""
     <div class="main-header">
-        <h1 style="margin-bottom: 8px; text-align: center; width: 100%; display: block; color: white;">🌊 Beachside AI Assistant</h1>
+        <h1 style="margin-bottom: 8px; text-align: center; width: 100%; display: block; color: white;">⛰️ Westlake AI Assistant</h1>
         <h2 style="font-size: 1.4rem; margin: 8px 0 8px 0; text-align: center; width: 100%; display: block; color: white;">Developed by Aarush Rajkumar</h2>
         <p style="margin-top: 8px; text-align: center; width: 100%; display: block; line-height: 1.4; max-width: 600px; margin-left: auto; margin-right: auto; color: white;">Your intelligent companion for exploring website content</p>
     </div>
@@ -1093,16 +1249,16 @@ def main():
                 st.session_state["dark_mode"] = dark_mode
                 st.rerun()  # Immediately refresh to apply theme changes
         
-        # Beachside Theme Toggle
+        # Westlake Theme Toggle
         col3, col4 = st.columns([1.2, 1.8])
         with col3:
             st.markdown("**Style:**")
         with col4:
-            # Beachside theme toggle
-            beachside_theme = st.toggle("Beachside Theme", value=st.session_state["beachside_theme"], key="beachside_theme_toggle")
+            # Westlake theme toggle
+            westlake_theme = st.toggle("Westlake Theme", value=st.session_state["westlake_theme"], key="westlake_theme_toggle")
             # Update session state if toggle changed
-            if beachside_theme != st.session_state["beachside_theme"]:
-                st.session_state["beachside_theme"] = beachside_theme
+            if westlake_theme != st.session_state["westlake_theme"]:
+                st.session_state["westlake_theme"] = westlake_theme
                 st.rerun()  # Immediately refresh to apply theme changes
         
         st.markdown("""
@@ -1144,18 +1300,18 @@ def main():
             </div>
             """, unsafe_allow_html=True)
         
-        # Add specific styling for clear chat history button in Beachside theme
-        if st.session_state.get("beachside_theme", False) and not st.session_state.get("dark_mode", True):
+        # Add specific styling for clear chat history button in Westlake theme
+        if st.session_state.get("westlake_theme", False) and not st.session_state.get("dark_mode", True):
             st.markdown("""
             <style>
-            /* Clear chat history button - solid green for Beachside light theme */
+            /* Clear chat history button - solid orange for Westlake light theme */
             div[data-testid="stSidebar"] .stButton > button {
-                background: #6aba45 !important;
+                background: #FF6A13 !important;
                 border: none !important;
                 color: white !important;
             }
             div[data-testid="stSidebar"] .stButton > button:hover {
-                background: #5aa935 !important;
+                background: #E55A0F !important;
                 transform: translateY(-1px) !important;
             }
             </style>
@@ -1344,7 +1500,7 @@ def main():
             with recommendations_container:
                 st.markdown("""
                 <p style='text-align: center; margin: 20px 0;'>
-                    I can help you find information about Beachside High School. Try one of these questions to get started:
+                    I can help you find information about Westlake High School. Try one of these questions to get started:
                 </p>
                 """, unsafe_allow_html=True)
                 
@@ -1352,25 +1508,25 @@ def main():
                 
                 with col1:
                     # Use direct button text instead of overlay approach
-                    if st.button("Tell me about Beachside High School", key="q1", use_container_width=True):
+                    if st.button("Tell me about Westlake High School", key="q1", use_container_width=True):
                         st.session_state["hide_recommendations"] = True
-                        st.session_state["pending_question"] = "Tell me about Beachside High School"
+                        st.session_state["pending_question"] = "Tell me about Westlake High School"
                         st.rerun()
                     
-                    if st.button("What programs does Beachside offer?", key="q3", use_container_width=True):
+                    if st.button("What programs does Westlake offer?", key="q3", use_container_width=True):
                         st.session_state["hide_recommendations"] = True
-                        st.session_state["pending_question"] = "What academic programs does Beachside High School offer?"
+                        st.session_state["pending_question"] = "What academic programs does Westlake High School offer?"
                         st.rerun()
                 
                 with col2:
-                    if st.button("How do I contact Beachside?", key="q2", use_container_width=True):
+                    if st.button("How do I contact Westlake?", key="q2", use_container_width=True):
                         st.session_state["hide_recommendations"] = True
-                        st.session_state["pending_question"] = "How can I contact Beachside High School?"
+                        st.session_state["pending_question"] = "How can I contact Westlake High School?"
                         st.rerun()
                     
                     if st.button("What extracurricular activities are available?", key="q4", use_container_width=True):
                         st.session_state["hide_recommendations"] = True
-                        st.session_state["pending_question"] = "What extracurricular activities and clubs are available at Beachside High School?"
+                        st.session_state["pending_question"] = "What extracurricular activities and clubs are available at Westlake High School?"
                         st.rerun()
         
         # Display chat messages in scrollable container
@@ -1605,7 +1761,7 @@ def main():
         // Find recommendation buttons and hide their container immediately
         var buttons = document.querySelectorAll('button');
         buttons.forEach(function(button) {
-            if (button.textContent.includes('Tell me about Beachside') || 
+            if (button.textContent.includes('Tell me about Westlake') || 
                 button.textContent.includes('What programs') ||
                 button.textContent.includes('How do I contact') ||
                 button.textContent.includes('What extracurricular')) {

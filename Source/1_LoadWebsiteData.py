@@ -371,7 +371,7 @@ def get_all_links(base_url, max_pages=50):
                             to_visit.append(full_url)
             
             # Be respectful - increased delay between wets
-            time.sleep(1)
+            time.sleep(2.5)
             
         except Exception as e:
             print(f"⚠️ Error scraping {current_url}: {e}")
@@ -594,7 +594,7 @@ if __name__ == "__main__":
     # =====================================================
     
     # Number of pages to scrape (MAIN SAFETY CONTROL)
-    max_pages = 150  # Start small and safe - increase gradually if needed
+    max_pages = 200  # Start small and safe - increase gradually if needed
     
     # PDF Processing limits
     max_pdfs = 150  # Number of PDFs to process (reduced for better reliability)
@@ -615,7 +615,7 @@ if __name__ == "__main__":
     print(f"🎯 Target: {base_url}")
     print(f"🛡️ Max pages to scrape: {max_pages}")
     print(f"📄 Max PDFs to process: {max_pdfs}")
-    print(f"⏱️ Delay between requests: 1.0 seconds")
+    print(f"⏱️ Delay between requests: 2.5 seconds")
     print(f"⏰ Timeout per page: 10 seconds")
     print()
     

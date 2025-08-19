@@ -191,11 +191,9 @@ def initialize_session_state():
         st.session_state["show_streaming"] = False
     if "streaming_response" not in st.session_state:
         st.session_state["streaming_response"] = None
-    # Sequential messaging flags
-    if "show_user_first" not in st.session_state:
-        st.session_state["show_user_first"] = False
-    if "pending_ai_input" not in st.session_state:
-        st.session_state["pending_ai_input"] = None
+    # Processing flags
+    if "processing_message" not in st.session_state:
+        st.session_state["processing_message"] = False
     # Hide recommendations flag
     if "hide_recommendations" not in st.session_state:
         st.session_state["hide_recommendations"] = False
@@ -1493,7 +1491,13 @@ def main():
     
     with chat_container:
         # Example questions for new users (show at top)
-        if not st.session_state["messages"] and not st.session_state.get("hide_recommendations", False):
+        show_recommendations = (
+            len(st.session_state.get("messages", [])) == 0 and 
+            not st.session_state.get("hide_recommendations", False) and
+            not st.session_state.get("pending_question")
+        )
+        
+        if show_recommendations:
             # Create a container for recommendations that can be cleared
             recommendations_container = st.container()
             
@@ -1509,23 +1513,19 @@ def main():
                 with col1:
                     # Use direct button text instead of overlay approach
                     if st.button("Tell me about Westlake High School", key="q1", use_container_width=True):
-                        st.session_state["hide_recommendations"] = True
                         st.session_state["pending_question"] = "Tell me about Westlake High School"
                         st.rerun()
                     
                     if st.button("What programs does Westlake offer?", key="q3", use_container_width=True):
-                        st.session_state["hide_recommendations"] = True
                         st.session_state["pending_question"] = "What academic programs does Westlake High School offer?"
                         st.rerun()
                 
                 with col2:
                     if st.button("How do I contact Westlake?", key="q2", use_container_width=True):
-                        st.session_state["hide_recommendations"] = True
                         st.session_state["pending_question"] = "How can I contact Westlake High School?"
                         st.rerun()
                     
                     if st.button("What extracurricular activities are available?", key="q4", use_container_width=True):
-                        st.session_state["hide_recommendations"] = True
                         st.session_state["pending_question"] = "What extracurricular activities and clubs are available at Westlake High School?"
                         st.rerun()
         
@@ -1583,20 +1583,37 @@ def main():
     # Handle pending question from recommendation buttons
     if "pending_question" in st.session_state and st.session_state["pending_question"]:
         question = st.session_state["pending_question"]
-        st.session_state["pending_question"] = None  # Clear the pending question
+        st.session_state["pending_question"] = None  # Clear the pending question immediately
         
-        # Add user message FIRST (like real messaging)
+        # Process the question directly without additional reruns
+        # Add user message
         st.session_state["messages"].append({"content": question, "is_user": True})
         
-        # Set up for AI response after showing user message
-        st.session_state["show_user_first"] = True
-        st.session_state["pending_ai_input"] = question
+        # Hide recommendations now that we have a conversation
+        st.session_state["hide_recommendations"] = True
+        
+        # Process AI response immediately
+        with st.spinner("Thinking..."):
+            ai_msg = robust_ai_call(question)
+            full_response = ai_msg["answer"]
+            
+            # Add AI response
+            st.session_state["messages"].append({"content": full_response, "is_user": False})
+            
+            # Update chat history for context
+            st.session_state["chat_history"].append(HumanMessage(content=question))
+            st.session_state["chat_history"].append(ai_msg["answer"])
+            
+            # Optimize session state
+            optimize_session_state()
+        
+        # Single rerun to show the complete conversation
         st.rerun()
     
     # Create input container that stays visible (minimal spacing)
     with st.container():
         # Check if we're currently processing
-        is_processing = st.session_state.get("show_user_first", False) or st.session_state.get("show_streaming", False)
+        is_processing = st.session_state.get("show_streaming", False)
         
         # Add CSS to reduce spacing above text input
         st.markdown("""
@@ -1619,9 +1636,8 @@ def main():
         </style>
         """, unsafe_allow_html=True)
         
-        # Input form with unique key to prevent duplication
-        form_key = f"chat_form_{len(st.session_state.get('messages', []))}"
-        with st.form(key=form_key, clear_on_submit=True):
+        # Input form with stable key to prevent duplication
+        with st.form(key="chat_form", clear_on_submit=True):
             col1, col2 = st.columns([5, 1])
             
             with col1:
@@ -1656,7 +1672,7 @@ def main():
                     send_button = st.form_submit_button("🚀 Send", use_container_width=True)
     
     # Handle user input from text box
-    if send_button and user_input.strip():
+    if send_button and user_input.strip() and not is_processing:
         # Mark user as no longer first-time
         st.session_state["first_time_user"] = False
         
@@ -1666,37 +1682,29 @@ def main():
         # Add user message to display FIRST (like real messaging)
         st.session_state["messages"].append({"content": clean_input, "is_user": True})
         
+        # Hide recommendations now that we have a conversation
+        st.session_state["hide_recommendations"] = True
+        
         # Clear any form-related flags to prevent duplication
         st.session_state["form_submitted"] = True
         
-        # Force a rerun to show user message first
-        st.session_state["show_user_first"] = True
-        st.session_state["pending_ai_input"] = clean_input
+        # Process AI response immediately
+        with st.spinner("Thinking..."):
+            ai_msg = robust_ai_call(clean_input)
+            full_response = ai_msg["answer"]
+            
+            # Add AI response
+            st.session_state["messages"].append({"content": full_response, "is_user": False})
+            
+            # Update chat history for context
+            st.session_state["chat_history"].append(HumanMessage(content=clean_input))
+            st.session_state["chat_history"].append(ai_msg["answer"])
+            
+            # Optimize session state
+            optimize_session_state()
+        
+        # Single rerun to show the complete conversation
         st.rerun()
-    
-    # Handle AI response after user message is shown
-    if "show_user_first" in st.session_state and st.session_state["show_user_first"]:
-        st.session_state["show_user_first"] = False  # Clear flag
-        user_question = st.session_state["pending_ai_input"]
-        st.session_state["pending_ai_input"] = None
-        
-        # Show thinking indicator
-        with thinking_placeholder:
-            st.markdown("""
-            <div style="text-align: center; padding: 10px; color: #666;">
-                🤔 <em>Thinking...</em>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Get AI response
-        ai_msg = robust_ai_call(user_question)
-        ai_response = ai_msg["answer"]
-        
-        # Clear thinking indicator
-        thinking_placeholder.empty()
-        
-        # Add AI response to messages (this will be streamed in place)
-        st.session_state["messages"].append({"content": ai_response, "is_user": False})
         
         # Update chat history for context
         st.session_state["chat_history"].extend([HumanMessage(content=user_question), ai_response])

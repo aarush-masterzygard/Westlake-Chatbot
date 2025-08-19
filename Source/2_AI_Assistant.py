@@ -72,7 +72,10 @@ ABBREVIATIONS = {
     "CS": "Computer Science",
     "AI": "Artificial Intelligence",
     "VR": "Virtual Reality",
-    "AR": "Augmented Reality"
+    "AR": "Augmented Reality",
+
+    #Courses
+    "ART": "Performing Arts"
 }
 
 def expand_abbreviations(query):
@@ -357,7 +360,7 @@ def get_retriever(_db):
     Create retriever from the vector database with caching.
     The underscore prefix in _db tells Streamlit not to hash this parameter.
     """
-    return _db.as_retriever(search_type="similarity", search_kwargs={"k": 6})
+    return _db.as_retriever(search_type="similarity", search_kwargs={"k": 8})
 
 @st.cache_resource
 def get_lazy_components():
